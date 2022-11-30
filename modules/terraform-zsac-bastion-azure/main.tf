@@ -1,7 +1,7 @@
 ################################################################################
 # Make sure that Bastion image terms have been accepted
 ################################################################################
-resource "azurerm_marketplace_agreement" "zs_image_agreement" {
+resource "azurerm_marketplace_agreement" "bastion_agreement" {
   offer     = var.instance_image_offer
   plan      = var.instance_image_sku
   publisher = var.instance_image_publisher
@@ -102,6 +102,7 @@ resource "azurerm_linux_virtual_machine" "bastion_vm" {
 
   depends_on = [
     azurerm_network_interface.bastion_nic,
-    azurerm_network_interface_security_group_association.bastion_nic_association
+    azurerm_network_interface_security_group_association.bastion_nic_association,
+    azurerm_marketplace_agreement.bastion_agreement
   ]
 }
