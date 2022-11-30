@@ -1,4 +1,14 @@
 ################################################################################
+# Make sure that Bastion image terms have been accepted
+################################################################################
+resource "azurerm_marketplace_agreement" "zs_image_agreement" {
+  offer     = var.instance_image_offer
+  plan      = var.instance_image_sku
+  publisher = var.instance_image_publisher
+}
+
+
+################################################################################
 # Create Bastion Host NSG and pre-defined rules
 ################################################################################
 resource "azurerm_network_security_group" "bastion_nsg" {

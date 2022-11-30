@@ -4,9 +4,10 @@ This module creates all the necessary VM, Network Interface, and NSG association
 
 ## Accept Azure Marketplace Terms
 
-Accept the App Connector VM image terms for the Subscription(s) where App Connector is to be deployed. This can be done via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal:
+This module will attempt to automatically accept the App Connector VM image terms for the Subscription(s) where App Connector is to be deployed. This can also be performaned and verified via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal:
 
 ```sh
+az vm image terms show --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 ```
 
@@ -37,6 +38,7 @@ No modules.
 |------|------|
 | [azurerm_availability_set.ac_availability_set](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/availability_set) | resource |
 | [azurerm_linux_virtual_machine.ac_vm](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine) | resource |
+| [azurerm_marketplace_agreement.zs_image_agreement](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/marketplace_agreement) | resource |
 | [azurerm_network_interface.ac_nic](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface) | resource |
 | [azurerm_network_interface_security_group_association.ac_nic_association](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface_security_group_association) | resource |
 
