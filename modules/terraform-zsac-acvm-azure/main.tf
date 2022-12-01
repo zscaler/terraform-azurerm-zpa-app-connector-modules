@@ -1,4 +1,14 @@
 ################################################################################
+# Make sure that Cloud Connector image terms have been accepted
+################################################################################
+resource "azurerm_marketplace_agreement" "zs_image_agreement" {
+  offer     = var.acvm_image_offer
+  plan      = var.acvm_image_sku
+  publisher = var.acvm_image_publisher
+}
+
+
+################################################################################
 # Create App Connector Interface and associate NSG
 ################################################################################
 # Create App Connector interface
@@ -78,6 +88,7 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
 
   depends_on = [
     azurerm_network_interface_security_group_association.ac_nic_association,
+    azurerm_marketplace_agreement.zs_image_agreement,
   ]
 }
 

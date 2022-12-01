@@ -32,16 +32,14 @@ Our Deployment scripts are leveraging Terraform v1.1.9 that includes full binary
    2. Directory (tenant) ID
    3. Client Secret Value
 3. Azure Region (e.g. westus2) where App Connector resources are to be deployed
-6. Accept the App Connector VM image terms for the Subscription(s) where App Connector is to be deployed. This can be done via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal in the correct subscription where App Connector is being deployed.
-    Run Command: az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 
 ### Zscaler requirements
-7. A valid Zscaler Private Access subscription and portal access
-8. Zscaler ZPA API Keys. Details on how to find and generate ZPA API keys can be located here: https://help.zscaler.com/zpa/about-api-keys#:~:text=An%20API%20key%20is%20required,from%20the%20API%20Keys%20page
+4. A valid Zscaler Private Access subscription and portal access
+5. Zscaler ZPA API Keys. Details on how to find and generate ZPA API keys can be located here: https://help.zscaler.com/zpa/about-api-keys#:~:text=An%20API%20key%20is%20required,from%20the%20API%20Keys%20page
 - Client ID
 - Client Secret
 - Customer ID
-9. (Optional) An existing App Connector Group and Provisioning Key. Otherwise, you can follow the prompts in the examples terraform.tfvars to create a new Connector Group and Provisioning Key
+6. (Optional) An existing App Connector Group and Provisioning Key. Otherwise, you can follow the prompts in the examples terraform.tfvars to create a new Connector Group and Provisioning Key
 
 See: [Zscaler App Connector Azure Deployment Guide](https://help.zscaler.com/zpa/connector-deployment-guide-microsoft-azure) for additional prerequisite provisioning steps.
 
