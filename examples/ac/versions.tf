@@ -28,9 +28,15 @@ terraform {
   required_version = ">= 0.13.7, < 2.0.0"
 }
 
+
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
+
 
 provider "zpa" {
 }
