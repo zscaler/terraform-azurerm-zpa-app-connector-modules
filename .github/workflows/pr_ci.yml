@@ -13,7 +13,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    branches: ['main']
+    branches: ['master']
 
 jobs:
   pr_ci_wrkflw:
