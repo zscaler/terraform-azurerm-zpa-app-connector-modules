@@ -8,6 +8,10 @@
 Zscaler App Connector Azure Terraform Modules
 ===========================================================================================================
 
+Support Disclaimer
+-------
+!> **Disclaimer:** This Terraform module is community supported. Although the module is still supported by Zscaler employees, it is **NOT** supported by Zscaler support. Please open all enhancement requests and issues via [Github Issues](https://github.com/zscaler/terraform-azurerm-zia-sentinel-cloud-nss/issues) for support.
+
 ## Description
 This repository contains various modules and deployment configurations that can be used to deploy Zscaler App Connector appliances to securely connect to workloads within Microsoft Azure via the Zscaler Zero Trust Exchange. The examples directory contains complete automation scripts for both greenfield/POV and brownfield/production use.
 
