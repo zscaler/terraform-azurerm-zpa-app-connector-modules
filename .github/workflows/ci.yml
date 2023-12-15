@@ -49,7 +49,7 @@ jobs:
       - name: Terraform Validate
         id: validate-zsac-acvm-azure
         run: |
-          cd modules/terraform-zscc-ccvm-aws
+          cd modules/terraform-zsac-acvm-azure
           terraform validate -no-color
 
       - name: Terraform Init
