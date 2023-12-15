@@ -1,0 +1,89 @@
+name: Terraform checks
+on: [push, pull_request]
+
+jobs:
+  terraform-linter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        id: init-zpa-app-connector-group
+        run: |
+          cd modules/terraform-zpa-app-connector-group
+          terraform init
+
+      - name: Terraform Validate
+        id: validate-zpa-app-connector-group
+        run: |
+          cd modules/terraform-zpa-app-connector-group
+          terraform validate -no-color
+
+      - name: Terraform Init
+        id: init-zpa-provisioning-key
+        run: |
+          cd modules/terraform-zpa-provisioning-key
+          terraform init
+
+      - name: Terraform Validate
+        id: validate-zpa-provisioning-key
+        run: |
+          cd modules/terraform-zpa-provisioning-key
+          terraform validate -no-color
+
+      - name: Terraform Init
+        id: init-zsac-acvm-azure
+        run: |
+          cd modules/terraform-zsac-acvm-azure
+          terraform init
+
+      - name: Terraform Validate
+        id: validate-zsac-acvm-azure
+        run: |
+          cd modules/terraform-zsac-acvm-azure
+          terraform validate -no-color
+
+      - name: Terraform Init
+        id: init-zsac-bastion-azure
+        run: |
+          cd modules/terraform-zsac-bastion-azure
+          terraform init
+
+      - name: Terraform Validate
+        id: validate-zsac-bastion-azure
+        run: |
+          cd modules/terraform-zsac-bastion-azure
+          terraform validate -no-color
+
+      - name: Terraform Init
+        id: init-zsac-network-azure
+        run: |
+          cd modules/terraform-zsac-network-azure
+          terraform init
+
+      - name: Terraform Validate
+        id: validate-zsac-network-azure
+        run: |
+          cd modules/terraform-zsac-network-azure
+          terraform validate -no-color
+
+      - name: Terraform Init
+        id: init-zsac-nsg-azure
+        run: |
+          cd modules/terraform-zsac-nsg-azure
+          terraform init
+
+      - name: Terraform Validate
+        id: validate-zsac-nsg-azure
+        run: |
+          cd modules/terraform-zsac-nsg-azure
+          terraform validate -no-color
