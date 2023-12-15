@@ -13,7 +13,7 @@ on:
     - cron: '0 1 * * 4' # this means every Thursday @1am UTC
 
 jobs:
-  release_wrkflw:
+  release_workflow:
     name: Do release
     uses: zscaler/terraform-modules-zscaler-ci-workflows/.github/workflows/release_ci.yml@v1.0.0
     secrets: inherit

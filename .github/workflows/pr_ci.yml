@@ -16,7 +16,7 @@ on:
     branches: ['master']
 
 jobs:
-  pr_ci_wrkflw:
+  pr_ci_workflow:
     name: Run CI
     uses: zscaler/terraform-modules-zscaler-ci-workflows/.github/workflows/pr_ci.yml@v1.0.0
     secrets: inherit
