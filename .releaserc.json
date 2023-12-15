@@ -1,45 +1,45 @@
 {
   "branches": [
-    "master",
-    "develop"
+    "main",
+    "master"
   ],
+  "ci": false,
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
       {
-        "releaseRules": [
-          {
-            "breaking": true,
-            "release": "minor"
-          },
-          {
-            "type": "feat",
-            "release": "patch"
-          },
-          {
-            "type": "feat",
-            "scope": "MAJOR",
-            "release": "major"
-          }
-        ]
+        "preset": "conventionalcommits"
       }
     ],
-    "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/git",
+      "@semantic-release/release-notes-generator",
       {
-        "assets": [
-          "README.md"
-        ],
-        "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+        "preset": "conventionalcommits"
       }
     ],
     [
       "@semantic-release/github",
       {
-        "successComment": ":tada: This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} :tada:\n\nThe release is available on [Terraform Registry](https://registry.terraform.io/modules/zscaler/zpa-app-connector-modules/azurerm/latest) and [GitHub release](../releases/tag/v${nextRelease.version})\n\n> Posted by [semantic-release](https://github.com/semantic-release/semantic-release) bot"
+        "successComment": "This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} :tada:",
+        "labels": false,
+        "releasedLabels": false
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md",
+        "changelogTitle": "# Changelog\n\nAll notable changes to this project will be documented in this file."
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md"
+        ],
+        "message": "chore(release): version ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]
-  ],
-  "preset": "conventionalcommits"
+  ]
 }
