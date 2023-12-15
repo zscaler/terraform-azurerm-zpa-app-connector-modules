@@ -27,8 +27,8 @@ jobs:
 
       - name: Run pre-commit framework as the developer should run it
         run: |
-          sudo ./scripts/install.sh
-          sudo ./scripts/run.sh
+          sudo scripts/install.sh
+          sudo scripts/run.sh
 
       - name: The `git diff` showing whether the pre-commit mandated extra changes to the repository files
         if: failure()
