@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.0.1...v1.1.0) (2024-07-26)
+
+
+### Features
+
+* Updated all modules to new Zscaler RHEL9 Images ([#8](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/issues/8)) ([dc7d850](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/commit/dc7d8504574e2e64c8f0ffff238f36ef9b55a7d9))
+
 ## 1.0.0 (2022-12-01)
 
 
