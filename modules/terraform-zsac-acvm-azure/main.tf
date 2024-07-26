@@ -1,5 +1,5 @@
 ################################################################################
-# Make sure that Cloud Connector image terms have been accepted
+# Make sure that ZPA App Connector image terms have been accepted
 ################################################################################
 resource "azurerm_marketplace_agreement" "zs_image_agreement" {
   offer     = var.acvm_image_offer

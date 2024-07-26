@@ -119,7 +119,7 @@ data "azurerm_subnet" "ac_subnet_selected" {
   virtual_network_name = var.byo_vnet == false ? data.azurerm_virtual_network.vnet_selected.name : var.byo_vnet_name
 }
 
-# Associate Cloud Connector Subnet to NAT Gateway
+# Associate ZPA App Connector Subnet to NAT Gateway
 resource "azurerm_subnet_nat_gateway_association" "ac_subnet_nat_association" {
   count          = var.existing_nat_gw_subnet_association == false ? length(data.azurerm_subnet.ac_subnet_selected[*].id) : 0
   subnet_id      = data.azurerm_subnet.ac_subnet_selected[count.index].id
