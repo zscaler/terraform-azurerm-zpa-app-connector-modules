@@ -23,7 +23,7 @@ variable "resource_group" {
 
 variable "location" {
   type        = string
-  description = "Cloud Connector Azure Region"
+  description = "ZPA App Connector Azure Region"
 }
 
 variable "public_subnet_id" {
@@ -34,7 +34,7 @@ variable "public_subnet_id" {
 variable "server_admin_username" {
   type        = string
   description = "Username configured for the Bastion Host root/admin account"
-  default     = "centos"
+  default     = "ubuntu"
 }
 
 variable "ssh_key" {
@@ -50,25 +50,25 @@ variable "instance_size" {
 
 variable "instance_image_publisher" {
   type        = string
-  description = "The Bastion Host CentOS image publisher"
-  default     = "OpenLogic"
+  description = "The Bastion Host Ubuntu image publisher"
+  default     = "Canonical"
 }
 
 variable "instance_image_offer" {
   type        = string
-  description = "The Bastion Host CentOS image offer"
-  default     = "CentOS"
+  description = "The Bastion Host Ubuntu image offer"
+  default     = "0001-com-ubuntu-server-jammy"
 }
 
 variable "instance_image_sku" {
   type        = string
-  description = "The Bastion Host CentOS image sku"
-  default     = "7.5"
+  description = "The Bastion Host Ubuntu image sku"
+  default     = "22_04-lts"
 }
 
 variable "instance_image_version" {
   type        = string
-  description = "The Bastion Host CentOS image version"
+  description = "The Bastion Host Ubuntu image version"
   default     = "latest"
 }
 

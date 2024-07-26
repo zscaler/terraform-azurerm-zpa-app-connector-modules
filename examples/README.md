@@ -49,7 +49,7 @@ Optional: Edit the terraform.tfvars file under your desired deployment type (ie:
 
 ```
 Deployment Type: (base | base_ac ):
-**base** - Creates: 1 Resource Group containing; 1 VNet w/ 1 subnet (public/bastion); 1 Centos Bastion Host w/ 1 PIP + 1 Network Interface + NSG; generates local key pair .pem file for ssh access. This does NOT deploy any actual App Connectors.
+**base** - Creates: 1 Resource Group containing; 1 VNet w/ 1 subnet (public/bastion); 1 Ubuntu Bastion Host w/ 1 PIP + 1 Network Interface + NSG; generates local key pair .pem file for ssh access. This does NOT deploy any actual App Connectors.
 
 **base_ac** - Base deployment + Creates 1 App Connector private subnet; 2 App Connector VMs in an availability set (or zones if supported and specified) each with a single network interface and NIC NSG
 ```
