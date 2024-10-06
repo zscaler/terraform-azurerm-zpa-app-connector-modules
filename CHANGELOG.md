@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.1.1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.1.0...v1.1.1) (2024-10-06)
+
+
+### Bug Fixes
+
+* IMplemented flexible custom name convention ([#10](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/issues/10)) ([909afc4](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/commit/909afc4ef2f5ece6e1a3218d7d5c2d34d64dfbc1))
+
 ## [1.1.0](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.0.1...v1.1.0) (2024-07-26)
 
 
