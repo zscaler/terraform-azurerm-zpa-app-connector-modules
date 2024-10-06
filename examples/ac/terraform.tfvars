@@ -19,6 +19,12 @@
 #provisioning_key_enabled                       = true
 #provisioning_key_max_usage                     = 10
 
+## If you want to specify custom resource names for the provisioning key, connector group, etc.,
+## provide a name variable here. Otherwise, leave it commented out, and the default naming convention
+## will be used.
+
+custom_name = "custom-name"
+
 ## 2. ZPA App Connector Group variables. Uncomment and replace default values as desired for your deployment. 
 ##    For any questions populating the below values, please reference: 
 ##    https://registry.terraform.io/providers/zscaler/zpa/latest/docs/resources/zpa_app_connector_group

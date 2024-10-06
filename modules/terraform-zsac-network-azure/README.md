@@ -2,7 +2,7 @@
 
 This module has multi-purpose use and is leveraged by all other Zscaler App Connector child modules in some capacity. All network infrastructure resources pertaining to connectivity dependencies for a successful App Connector deployment in a private subnet are referenced here. Full list of resources can be found below, but in general this module will handle all Resource Group, VNet, Subnets, NAT Gateways, Public IP, and Route Table creations to build out a resilient Azure network architecture. Most resources also have "conditional create" capabilities where, by default, they will all be created unless instructed not to with various "byo" and "enabled" variables. Use cases are documented in more detail in each description in variables.tf as well as the terraform.tfvars example file for all non-base deployment types (ie: cc_lb, etc.).
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -80,4 +80,4 @@ No modules.
 | <a name="output_public_ip_address"></a> [public\_ip\_address](#output\_public\_ip\_address) | Azure Public IP Address |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Azure Resource Group Name |
 | <a name="output_virtual_network_id"></a> [virtual\_network\_id](#output\_virtual\_network\_id) | Azure Virtual Network ID |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

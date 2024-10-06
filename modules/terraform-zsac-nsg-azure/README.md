@@ -2,7 +2,7 @@
 
 This module can be used to create default interface NSG resources for App Connector appliances. A count can be set to create once of each resource or potentially one per appliance if desired. As part of Zscaler provided deployment templates most resources have conditional create options leveraged "byo" variables should a customer want to leverage the module outputs with data reference to resources that may already exist in their Azure environment.
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -45,4 +45,4 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_ac_nsg_id"></a> [ac\_nsg\_id](#output\_ac\_nsg\_id) | Network Security Group ID |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

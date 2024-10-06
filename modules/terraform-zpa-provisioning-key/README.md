@@ -4,7 +4,7 @@ This module provides the resources necessary to create a new ZPA App Connector P
 
 There is a "BYO" option where you can conditionally create new or reference an existing provisioning key by name.
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -48,4 +48,4 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_provisioning_key"></a> [provisioning\_key](#output\_provisioning\_key) | ZPA Provisioning Key Output |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

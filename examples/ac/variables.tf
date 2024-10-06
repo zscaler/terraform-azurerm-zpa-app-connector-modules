@@ -4,6 +4,12 @@ variable "arm_location" {
   default     = "westus2"
 }
 
+variable "custom_name" {
+  type        = string
+  description = "The full name of the resource. If provided, this will override name_prefix and resource_tag."
+  default     = null
+}
+
 variable "name_prefix" {
   type        = string
   description = "The name prefix for all your resources"

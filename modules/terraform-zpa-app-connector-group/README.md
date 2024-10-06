@@ -2,7 +2,7 @@
 
 This module provides the resources necessary to create a new ZPA App Connector Group to be used with App Connector appliance deployment and provisioining. This module is not intended to be used for any existing ZPA App Connector Groups created outside of Terraform.
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -48,4 +48,4 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_app_connector_group_id"></a> [app\_connector\_group\_id](#output\_app\_connector\_group\_id) | ZPA App Connector Group ID |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

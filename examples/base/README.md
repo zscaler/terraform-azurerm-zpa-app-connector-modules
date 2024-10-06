@@ -34,7 +34,7 @@ From the examples directory, run the zsac bash script that walks to all required
 From base directory execute:
 - terraform destroy
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -90,4 +90,4 @@ From base directory execute:
 | Name | Description |
 |------|-------------|
 | <a name="output_testbedconfig"></a> [testbedconfig](#output\_testbedconfig) | Azure Testbed results |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

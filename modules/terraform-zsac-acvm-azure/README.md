@@ -12,7 +12,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 ```
 
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -71,4 +71,4 @@ No modules.
 |------|-------------|
 | <a name="output_ac_hostname"></a> [ac\_hostname](#output\_ac\_hostname) | Instance Host Name |
 | <a name="output_private_ip"></a> [private\_ip](#output\_private\_ip) | Instance Management Interface Private IP Address |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

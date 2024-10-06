@@ -21,7 +21,7 @@ system-*.tar
 
 # Crash log files
 crash.log
-
+Makefile
 # Ignore any .tfvars files that are generated automatically for each Terraform run. Most
 # .tfvars files are managed as part of configuration and so should be included in
 # version control.
@@ -50,3 +50,4 @@ override.tf.json
 .todo
 local_test
 /local_test
+terraform.log
