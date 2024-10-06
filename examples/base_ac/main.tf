@@ -36,7 +36,7 @@ resource "tls_private_key" "key" {
 # write private key to local pem file
 resource "local_file" "private_key" {
   content         = tls_private_key.key.private_key_pem
-  filename        = "./${var.name_prefix}-key-${random_string.suffix.result}.pem"
+  filename        = coalesce(var.custom_name, "./${var.name_prefix}-key-${random_string.suffix.result}.pem")
   file_permission = "0600"
 }
 
@@ -47,7 +47,7 @@ resource "local_file" "private_key" {
 ################################################################################
 module "network" {
   source                = "../../modules/terraform-zsac-network-azure"
-  name_prefix           = var.name_prefix
+  name_prefix           = coalesce(var.custom_name, var.name_prefix)
   resource_tag          = random_string.suffix.result
   global_tags           = local.global_tags
   location              = var.arm_location
@@ -66,7 +66,7 @@ module "network" {
 module "bastion" {
   source                    = "../../modules/terraform-zsac-bastion-azure"
   location                  = var.arm_location
-  name_prefix               = var.name_prefix
+  name_prefix               = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
   resource_tag              = random_string.suffix.result
   global_tags               = local.global_tags
   resource_group            = module.network.resource_group_name
@@ -82,7 +82,7 @@ module "bastion" {
 module "zpa_app_connector_group" {
   count                                        = var.byo_provisioning_key == true ? 0 : 1 # Only use this module if a new provisioning key is needed
   source                                       = "../../modules/terraform-zpa-app-connector-group"
-  app_connector_group_name                     = "${var.arm_location}-${module.network.resource_group_name}"
+  app_connector_group_name                     = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
   app_connector_group_description              = "${var.app_connector_group_description}-${var.arm_location}-${module.network.resource_group_name}"
   app_connector_group_enabled                  = var.app_connector_group_enabled
   app_connector_group_country_code             = var.app_connector_group_country_code
@@ -103,7 +103,7 @@ module "zpa_app_connector_group" {
 module "zpa_provisioning_key" {
   source                            = "../../modules/terraform-zpa-provisioning-key"
   enrollment_cert                   = var.enrollment_cert
-  provisioning_key_name             = "${var.arm_location}-${module.network.resource_group_name}"
+  provisioning_key_name             = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
   provisioning_key_enabled          = var.provisioning_key_enabled
   provisioning_key_association_type = var.provisioning_key_association_type
   provisioning_key_max_usage        = var.provisioning_key_max_usage
@@ -150,7 +150,7 @@ resource "local_file" "user_data_file" {
 module "ac_vm" {
   source               = "../../modules/terraform-zsac-acvm-azure"
   ac_count             = var.ac_count
-  name_prefix          = var.name_prefix
+  name_prefix          = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
   resource_tag         = random_string.suffix.result
   global_tags          = local.global_tags
   resource_group       = module.network.resource_group_name
@@ -182,7 +182,7 @@ module "ac_vm" {
 module "ac_nsg" {
   source         = "../../modules/terraform-zsac-nsg-azure"
   nsg_count      = var.reuse_nsg == false ? var.ac_count : 1
-  name_prefix    = var.name_prefix
+  name_prefix    = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
   resource_tag   = random_string.suffix.result
   resource_group = module.network.resource_group_name
   location       = var.arm_location

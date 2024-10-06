@@ -2,7 +2,7 @@
 
 This module creates all Azure VM, NSG, and Public IP resources needed to deploy a publicly accessible bastion/jump host for App Connector Greenfield/POV environments.
 
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -55,4 +55,4 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip) | Instance Public IP Address |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->
