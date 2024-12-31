@@ -249,14 +249,14 @@ first_run="yes"
 	"uaenorth"
 	"uksouth"
 	"ukwest"
-	#"usdodcentral"
-	#"usdodeast"
-	#"usgovarizona"
-	#"usgovtexas"
-	#"usgovvirginia"
-	#"usseceast"
-	#"ussecwest"
-	#"ussecwestcentral"
+	"usdodcentral"
+	"usdodeast"
+	"usgovarizona"
+	"usgovtexas"
+	"usgovvirginia"
+	"usseceast"
+	"ussecwest"
+	"ussecwestcentral"
 	"westcentralus"
 	"westeurope"
 	"westindia"
@@ -386,7 +386,7 @@ first_run="yes"
                     |grep -o '"state":"[^"]*' | awk -F'"' '{print $4}')
 
                 if [ "$response" = "Registered" ]; then
-                    echo "Setting encryption_at_host_enabled to true..."
+                    echo "${GREEN}Setting encryption_at_host_enabled to true...${RESET}"
                     encryption_at_host_enabled=true
                 else
                     echo "${RED}Error: Azure Subscription $ARM_SUBSCRIPTION_ID is not registered to support host encryption. Please refer to documentation.${RESET}"
@@ -493,17 +493,17 @@ first_run="yes"
             do
                 case $REPLY in
                 1 )
-                    echo "One Availability Zone selected..."
+                    echo "${GREEN}One Availability Zone selected...${RESET}"
                     zones_count=1
                 break
                 ;;
                 2 )
-                    echo "Two Availability Zones selected..."
+                    echo "${GREEN}Two Availability Zones selected...${RESET}"
                     zones_count=2
                 break
                 ;;
                 3 )
-                    echo "Three Availability Zones selected..."
+                    echo "${GREEN}Three Availability Zones selected...${RESET}"
                     zones_count=3
                 break
                 ;;
@@ -525,17 +525,17 @@ first_run="yes"
                 do
                     case $REPLY in
                     1 )
-                        echo "App Connector resources will be deployed in AZ 1"
+                        echo "${GREEN}App Connector resources will be deployed in AZ 1${RESET}"
                         echo "export TF_VAR_zones='[\"1\"]'" >> .zsacrc
                     break
                     ;;
                     2 )
-                        echo "App Connector resources will be deployed in AZ 2"
+                        echo "${GREEN}App Connector resources will be deployed in AZ 2${RESET}"
                         echo "export TF_VAR_zones='[\"2\"]'" >> .zsacrc
                     break
                     ;;
                     3 )
-                        echo "App Connector resources will be deployed in AZ 3"
+                        echo "${GREEN}App Connector resources will be deployed in AZ 3${RESET}"
                         echo "export TF_VAR_zones='[\"3\"]'" >> .zsacrc
                     break
                     ;;
@@ -553,17 +553,17 @@ first_run="yes"
                 do
                     case $REPLY in
                     1 )
-                        echo "App Connector resources will be deployed in AZ 1 and AZ 2"
+                        echo "${GREEN}App Connector resources will be deployed in AZ 1 and AZ 2${RESET}"
                         echo "export TF_VAR_zones='[\"1\", \"2\"]'" >> .zsacrc
                     break
                     ;;
                     2 )
-                        echo "App Connector resources will be deployed in AZ 1 and AZ 3"
+                        echo "${GREEN}App Connector resources will be deployed in AZ 1 and AZ 3${RESET}"
                         echo "export TF_VAR_zones='[\"1\", \"3\"]'" >> .zsacrc
                     break
                     ;;
                     3 )
-                        echo "App Connector resources will be deployed in AZ 2 and AZ 3"
+                        echo "${GREEN}App Connector resources will be deployed in AZ 2 and AZ 3${RESET}"
                         echo "export TF_VAR_zones='[\"2\", \"3\"]'" >> .zsacrc
                     break
                     ;;
@@ -573,16 +573,16 @@ first_run="yes"
                 done
             fi
         else
-            echo "App Connector resources will be deployed in AZ 1, AZ 2 and AZ 3"
+            echo "${GREEN}App Connector resources will be deployed in AZ 1, AZ 2 and AZ 3${RESET}"
             echo "export TF_VAR_zones='[\"1\", \"2\", \"3\"]'" >> .zsacrc
         fi
 
         # VMSS specific inputs
         if [[ $dtype == *"vmss"* ]]; then
             if [[ "$zones_enabled" == "true" ]]; then
-                echo "Explicit Availability Zones based deployed detected... Terraform will create a total of $zones_count VMSS; one per designated AZ"
+                echo "${GREEN}Explicit Availability Zones based deployed detected... Terraform will create a total of $zones_count VMSS; one per designated AZ${RESET}"
             else
-                echo "No explicit Availbility Zones were specified... Terraform will create a single VMSS"
+                echo "${GREEN}No explicit Availability Zones were specified... Terraform will create a single VMSS${RESET}"
             fi
             #########################################
             # Min/Default/Max VMSS Configuration
@@ -625,9 +625,9 @@ first_run="yes"
             fi
 
             if [[ "$zones_enabled" == "true" ]]; then
-                echo "${dtype} will deploy $zones_count VMSS each with min: ${vmss_min} default: ${vmss_default} max: ${vmss_max} App Connectors in ${azure_location}"
+                echo "${GREEN}${dtype} will deploy $zones_count VMSS each with min: ${vmss_min} default: ${vmss_default} max: ${vmss_max} App Connectors in ${azure_location}${RESET}"
             else
-                echo "${dtype} will deploy 1 VMSS with min: ${vmss_min} default: ${vmss_default} max: ${vmss_max} App Connectors in ${azure_location}"
+                echo "${GREEN}${dtype} will deploy 1 VMSS with min: ${vmss_min} default: ${vmss_default} max: ${vmss_max} App Connectors in ${azure_location}${RESET}"
             fi
             echo "export TF_VAR_vmss_min_acs=${vmss_min}" >> .zsacrc
             echo "export TF_VAR_vmss_default_acs=${vmss_default}" >> .zsacrc
@@ -667,7 +667,7 @@ first_run="yes"
                 read -r -p "${CYAN}Do you want to enable scheduled scaling on the VMSS? [yes/no]: ${RESET}" response
                 case $response in 
                 no|n ) 
-                    echo "Skipping scheduled scaling configuration."
+                    echo "${GREEN}Skipping scheduled scaling configuration...${RESET}"
                 break
                 ;;
                 yes|y )
@@ -693,11 +693,11 @@ first_run="yes"
                             read -r -p "${CYAN}Apply Scheduled Scaling Policy on ${day}? [yes/no]: ${RESET}" resp
                             case $resp in 
                             no|n ) 
-                                echo "Not configuring ${day} on Scheduled Scaling configuration."
+                                echo "${GREEN}Not configuring ${day} on Scheduled Scaling configuration...${RESET}"
                             break
                             ;;
                             yes|y )
-                                echo "Adding ${day} on Scheduled Scaling configuration."
+                                echo "${GREEN}Adding ${day} on Scheduled Scaling configuration...${RESET}"
                                 days_of_week+=($day)
                             break
                             ;;
@@ -713,7 +713,7 @@ first_run="yes"
                         print_str+="${day} "
                     done
                     days_of_week_str+="]'"
-                    echo "Configuring the following days on the Scheduled Scaling Policy: ${print_str}"
+                    echo "${GREEN}Configuring the following days on the Scheduled Scaling Policy: ${print_str}${RESET}"
                         
                     # start time hour
                     start_hour_default=9
