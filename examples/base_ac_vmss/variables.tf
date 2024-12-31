@@ -95,16 +95,6 @@ variable "acvm_image_version" {
   default     = "latest"
 }
 
-variable "ac_count" {
-  type        = number
-  description = "The number of App Connectors to deploy.  Validation assumes max for /24 subnet but could be smaller or larger as long as subnet can accommodate"
-  default     = 1
-  validation {
-    condition     = var.ac_count >= 1 && var.ac_count <= 250
-    error_message = "Input ac_count must be a whole number between 1 and 250."
-  }
-}
-
 variable "zones_enabled" {
   type        = bool
   description = "Determine whether to provision App Connector VMs explicitly in defined zones (if supported by the Azure region provided in the location variable). If left false, Azure will automatically choose a zone and module will create an availability set resource instead for VM fault tolerance"
@@ -129,11 +119,6 @@ variable "encryption_at_host_enabled" {
   default     = true
 }
 
-variable "reuse_nsg" {
-  type        = bool
-  description = "Specifies whether the NSG module should create 1:1 network security groups per instance or 1 network security group for all instances"
-  default     = "false"
-}
 
 # ZPA Provider specific variables for App Connector Group and Provisioning Key creation
 variable "byo_provisioning_key" {

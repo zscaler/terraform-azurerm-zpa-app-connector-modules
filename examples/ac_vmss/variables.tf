@@ -89,16 +89,6 @@ variable "acvm_image_version" {
   default     = "latest"
 }
 
-variable "ac_count" {
-  type        = number
-  description = "The number of App Connectors to deploy.  Validation assumes max for /24 subnet but could be smaller or larger as long as subnet can accommodate"
-  default     = 1
-  validation {
-    condition     = var.ac_count >= 1 && var.ac_count <= 250
-    error_message = "Input ac_count must be a whole number between 1 and 250."
-  }
-}
-
 variable "zones_enabled" {
   type        = bool
   description = "Determine whether to provision App Connector VMs explicitly in defined zones (if supported by the Azure region provided in the location variable). If left false, Azure will automatically choose a zone and module will create an availability set resource instead for VM fault tolerance"

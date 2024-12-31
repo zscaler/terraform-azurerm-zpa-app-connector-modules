@@ -139,7 +139,7 @@ resource "azurerm_monitor_autoscale_setting" "vmss_autoscale_setting" {
     }
 
     dynamic "recurrence" {
-      for_each = var.scheduled_scaling_enabled != false ? ["apply"] : []
+      for_each = var.scheduled_scaling_enabled ? ["apply"] : []
       content {
         timezone = var.scheduled_scaling_timezone
         days     = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]

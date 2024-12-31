@@ -111,11 +111,13 @@ module "zpa_provisioning_key" {
 }
 
 ################################################################################
-# 4. Create specified number of AC VMs per ac_count by default in an
+# 4. Create specified number of AC VMs per vmss_default_acs by default in an
 #    availability set for Azure Data Center fault tolerance. Optionally, deployed
 #    ACs can automatically span equally across designated availabilty zones 
-#    if enabled via "zones_enabled" and "zones" variables. E.g. ac_count set to 
-#    4 and 2 zones ['1","2"] will create 2x ACs in AZ1 and 2x ACs in AZ2
+#    if enabled via "zones_enabled" and "zones" variables where the number of
+#    VMSS created will equal the number of "zones" specified.
+#    E.g. 2 zones ['1","2"] and vmss_default_acs of 2 will create 2x Scale Sets
+#    EACH with 2x ACs where VMSS-1 ACs are assigned AZ1 and VMMS-2 ACs in AZ2
 ################################################################################
 # Create the user_data file with necessary bootstrap variables for App Connector registration
 locals {

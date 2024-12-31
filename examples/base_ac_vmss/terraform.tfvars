@@ -1,7 +1,7 @@
 ## This is only a sample terraform.tfvars file.
 ## Uncomment and change the below variables according to your specific environment
 #####################################################################################################################
-##### Variables 5-13 are populated automically if terraform is ran via ZSAC bash script.   ##### 
+##### Variables are populated automically if terraform is ran via ZSAC bash script.   ##### 
 ##### Modifying the variables in this file will override any inputs from ZSAC              #####
 #####################################################################################################################
 
@@ -72,13 +72,7 @@
 #acvm_instance_type                         = "Standard_D4s_v3"
 #acvm_instance_type                         = "Standard_F4s_v2"
 
-## 7. The number of App Connector appliances to provision. Each incremental App Connector will be created in alternating 
-##     subnets based on the zones or byo_subnet_names variable and loop through for any deployments where ac_count > zones.
-##     E.g. ac_count set to 4 and 2 zones set ['1","2"] will create 2x ACs in AZ1 and 2x ACs in AZ2
-
-#ac_count                                   = 2
-
-## 8. By default, no zones are specified in any resource creation meaning they are either auto-assigned by Azure 
+## 7. By default, no zones are specified in any resource creation meaning they are either auto-assigned by Azure 
 ##    (Virtual Machines and NAT Gateways) or Zone-Redundant (Public IP) based on whatever default configuration is.
 ##    Setting this value to true will do the following:
 ##    1. will create zonal NAT Gateway resources in order of the zones [1-3] specified in zones variable. 1x per zone
@@ -89,7 +83,7 @@
 
 #zones_enabled                              = true
 
-## 9. By default, this variable is used as a count (1) for resource creation of Public IP, NAT Gateway, and AC Subnets.
+## 8. By default, this variable is used as a count (1) for resource creation of Public IP, NAT Gateway, and AC Subnets.
 ##    This should only be modified if zones_enabled is also set to true
 ##    Doing so will change the default zone aware configuration for the 3 aforementioned resources with the values specified
 ##    
@@ -104,7 +98,7 @@
 #zones                                      = ["1","2"]
 #zones                                      = ["1","2","3"]
 
-## 10. Network Configuration:
+## 9. Network Configuration:
 
 ##    IPv4 CIDR configured with VNet creation. All Subnet resources (Workload, Public, and App Connector) will be created based off this prefix
 ##    /24 subnets are created assuming this cidr is a /16. If you require creating a VNet smaller than /16, you may need to explicitly define all other 
@@ -127,15 +121,49 @@
 #public_subnets                             = ["10.x.y.z/24","10.x.y.z/24"]
 #ac_subnets                                 = ["10.x.y.z/24","10.x.y.z/24"]
 
-## 11. Tag attribute "Owner" assigned to all resoure creation. (Default: "zsac-admin")
+## 10. Tag attribute "Owner" assigned to all resoure creation. (Default: "zsac-admin")
 
 #owner_tag                                  = "username@company.com"
 
-## 12. Tag attribute "Environment" assigned to all resources created. (Default: "Development")
+## 11. Tag attribute "Environment" assigned to all resources created. (Default: "Development")
 
 #environment                                = "Development"
 
-## 13. By default, this script will apply 1 Network Security Group per App Connector instance. 
-##     Uncomment if you want to use the same Network Security Group for ALL App Connectors (true or false. Default: false)
+## 12. By default, Host encryption is enabled for App Connector VMs. This does require the EncryptionAtHost feature
+##     enabled for your subscription though first.
+##     You can verify this by following the Azure Prerequisites guide here: 
+##     https://learn.microsoft.com/en-us/azure/virtual-machines/linux/disks-enable-host-based-encryption-cli#prerequisites
+##
+##    Uncomment if you want to not enable this VM setting
 
-#reuse_nsg                                  = true
+#encryption_at_host_enabled                 = false
+
+
+#####################################################################################################################
+## 13. VMSS configurations ##
+#####################################################################################################################
+
+#vmss_default_acs                   = 2 	# number of ACs VMSS defaults too if no metrics are published, recommended to set to same value as vmss_min_acs
+#vmss_min_acs                       = 2
+#vmss_max_acs                       = 4
+
+# Note: Per Azure recommended reference architecture/resiliency, the number of Virtual Machine Scale Sets created will be based on region zones support
+#       AND Terraform configuration enablement. e.g. If you set var.zones_enabled to true and specify 2x AZs in var.zones, Terraform will expect
+#       2x separate App Connector private subnets and create 2x separate VMSS resources; one in subnet-1 and the other in subnet-2.
+
+#       Therefore, vmss_default/min/max are PER VMSS. For example if you set vmss_min_acs to 2 with 2x AZs, you will end up with 2x VMSS each with 2x ACs
+#       for a total of 4x App Connectors in the cluster
+
+#scale_in_threshold                 = 30
+#scale_out_threshold                = 70
+#terminate_unhealthy_instances      = false
+
+## Variables for enabling scheduled scaling, leaving it commented out will default to no scheduled scaling and will scale 
+## purely off the load on the ACs
+#scheduled_scaling_enabled          = true
+#scheduled_scaling_vmss_min_acs     = 4
+#scheduled_scaling_days_of_week     = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+#scheduled_scaling_start_time_hour  = 8
+#scheduled_scaling_start_time_min   = 30
+#scheduled_scaling_end_time_hour    = 17
+#scheduled_scaling_end_time_min     = 30
