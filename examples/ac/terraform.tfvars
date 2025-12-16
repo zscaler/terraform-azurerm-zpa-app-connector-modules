@@ -23,7 +23,7 @@
 ## provide a name variable here. Otherwise, leave it commented out, and the default naming convention
 ## will be used.
 
-custom_name = "custom-name"
+#custom_name = "custom-name"
 
 ## 2. ZPA App Connector Group variables. Uncomment and replace default values as desired for your deployment. 
 ##    For any questions populating the below values, please reference: 

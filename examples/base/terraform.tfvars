@@ -35,7 +35,6 @@
 
 #owner_tag                                  = "username@company.com"
 
-
 ## 4. Tag attribute "Environment" assigned to all resources created. (Default: "Development")
 
 #environment                                = "Development"
