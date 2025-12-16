@@ -5,6 +5,10 @@ examples/**/.terraform/*
 examples/**/.terraform.*
 modules/**/.terraform.*
 
+# Dependency lock file - not committed to always pull latest provider versions
+.terraform.lock.hcl
+**/.terraform.lock.hcl
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
@@ -21,7 +25,6 @@ system-*.tar
 
 # Crash log files
 crash.log
-Makefile
 # Ignore any .tfvars files that are generated automatically for each Terraform run. Most
 # .tfvars files are managed as part of configuration and so should be included in
 # version control.
@@ -51,3 +54,17 @@ override.tf.json
 local_test
 /local_test
 terraform.log
+
+# Go test artifacts
+*.test
+coverage.out
+coverage.html
+
+# Terratest artifacts
+terraform.tfplan
+.test-data/
+
+# IDE
+.vscode/
+*.swp
+*.swo
