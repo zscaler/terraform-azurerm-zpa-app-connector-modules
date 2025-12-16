@@ -46,7 +46,8 @@ resource "local_file" "private_key" {
 #    child modules (Resource Group, VNet, Subnets, NAT Gateway, Route Tables)
 ################################################################################
 module "network" {
-  source                = "../../modules/terraform-zsac-network-azure"
+  source = "../../modules/terraform-zsac-network-azure"
+  # Use name if provided, otherwise fall back to name_prefix
   name_prefix           = coalesce(var.custom_name, var.name_prefix)
   resource_tag          = random_string.suffix.result
   global_tags           = local.global_tags
@@ -56,28 +57,26 @@ module "network" {
   public_subnets        = var.public_subnets
   zones_enabled         = var.zones_enabled
   zones                 = var.zones
-  bastion_enabled       = true
+
+  byo_rg                             = var.byo_rg
+  byo_rg_name                        = var.byo_rg_name
+  byo_vnet                           = var.byo_vnet
+  byo_vnet_name                      = var.byo_vnet_name
+  byo_subnets                        = var.byo_subnets
+  byo_subnet_names                   = var.byo_subnet_names
+  byo_vnet_subnets_rg_name           = var.byo_vnet_subnets_rg_name
+  byo_pips                           = var.byo_pips
+  byo_pip_names                      = var.byo_pip_names
+  byo_pip_rg                         = var.byo_pip_rg
+  byo_nat_gws                        = var.byo_nat_gws
+  byo_nat_gw_names                   = var.byo_nat_gw_names
+  byo_nat_gw_rg                      = var.byo_nat_gw_rg
+  existing_nat_gw_pip_association    = var.existing_nat_gw_pip_association
+  existing_nat_gw_subnet_association = var.existing_nat_gw_subnet_association
 }
 
-
 ################################################################################
-# 2. Create Bastion Host for workload and AC SSH jump access
-################################################################################
-module "bastion" {
-  source                    = "../../modules/terraform-zsac-bastion-azure"
-  location                  = var.arm_location
-  name_prefix               = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
-  resource_tag              = random_string.suffix.result
-  global_tags               = local.global_tags
-  resource_group            = module.network.resource_group_name
-  public_subnet_id          = module.network.bastion_subnet_ids[0]
-  ssh_key                   = tls_private_key.key.public_key_openssh
-  bastion_nsg_source_prefix = var.bastion_nsg_source_prefix
-}
-
-
-################################################################################
-# 3. Create ZPA App Connector Group
+# 2. Create ZPA App Connector Group
 ################################################################################
 module "zpa_app_connector_group" {
   count                                        = var.byo_provisioning_key == true ? 0 : 1 # Only use this module if a new provisioning key is needed
@@ -96,9 +95,8 @@ module "zpa_app_connector_group" {
   app_connector_group_dns_query_type           = var.app_connector_group_dns_query_type
 }
 
-
 ################################################################################
-# 4. Create ZPA Provisioning Key (or reference existing if byo set)
+# 3. Create ZPA Provisioning Key (or reference existing if byo set)
 ################################################################################
 module "zpa_provisioning_key" {
   source                            = "../../modules/terraform-zpa-provisioning-key"
@@ -113,11 +111,13 @@ module "zpa_provisioning_key" {
 }
 
 ################################################################################
-# 5. Create specified number of AC VMs per ac_count by default in an
+# 4. Create specified number of AC VMs per vmss_default_acs by default in an
 #    availability set for Azure Data Center fault tolerance. Optionally, deployed
 #    ACs can automatically span equally across designated availabilty zones 
-#    if enabled via "zones_enabled" and "zones" variables. E.g. ac_count set to 
-#    4 and 2 zones ['1","2"] will create 2x ACs in AZ1 and 2x ACs in AZ2
+#    if enabled via "zones_enabled" and "zones" variables where the number of
+#    VMSS created will equal the number of "zones" specified.
+#    E.g. 2 zones ['1","2"] and vmss_default_acs of 2 will create 2x Scale Sets
+#    EACH with 2x ACs where VMSS-1 ACs are assigned AZ1 and VMMS-2 ACs in AZ2
 ################################################################################
 # Create the user_data file with necessary bootstrap variables for App Connector registration
 locals {
@@ -147,44 +147,66 @@ resource "local_file" "user_data_file" {
 }
 
 # Create specified number of AC appliances
-module "ac_vm" {
-  source               = "../../modules/terraform-zsac-acvm-azure"
-  ac_count             = var.ac_count
-  name_prefix          = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
-  resource_tag         = random_string.suffix.result
-  global_tags          = local.global_tags
-  resource_group       = module.network.resource_group_name
-  ac_subnet_id         = module.network.ac_subnet_ids
-  ssh_key              = tls_private_key.key.public_key_openssh
-  user_data            = local.appuserdata
-  location             = var.arm_location
-  zones_enabled        = var.zones_enabled
-  zones                = var.zones
-  acvm_instance_type   = var.acvm_instance_type
-  acvm_image_publisher = var.acvm_image_publisher
-  acvm_image_offer     = var.acvm_image_offer
-  acvm_image_sku       = var.acvm_image_sku
-  acvm_image_version   = var.acvm_image_version
-  ac_nsg_id            = module.ac_nsg.ac_nsg_id
+module "ac_vmss" {
+  source                     = "../../modules/terraform-zsac-acvmss-azure"
+  name_prefix                = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
+  resource_tag               = random_string.suffix.result
+  global_tags                = local.global_tags
+  resource_group             = module.network.resource_group_name
+  ac_subnet_id               = module.network.ac_subnet_ids
+  ssh_key                    = tls_private_key.key.public_key_openssh
+  user_data                  = local.appuserdata
+  location                   = var.arm_location
+  zones_enabled              = var.zones_enabled
+  zones                      = var.zones
+  acvm_instance_type         = var.acvm_instance_type
+  acvm_image_publisher       = var.acvm_image_publisher
+  acvm_image_offer           = var.acvm_image_offer
+  acvm_image_sku             = var.acvm_image_sku
+  acvm_image_version         = var.acvm_image_version
+  ac_nsg_id                  = module.ac_nsg.ac_nsg_id[0]
+  encryption_at_host_enabled = var.encryption_at_host_enabled
+
+  vmss_default_acs            = var.vmss_default_acs
+  vmss_min_acs                = var.vmss_min_acs
+  vmss_max_acs                = var.vmss_max_acs
+  scale_out_threshold         = var.scale_out_threshold
+  scale_in_threshold          = var.scale_in_threshold
+  scale_out_cooldown          = var.scale_out_cooldown
+  scale_in_cooldown           = var.scale_in_cooldown
+  scale_out_evaluation_period = var.scale_out_evaluation_period
+  scale_in_evaluation_period  = var.scale_in_evaluation_period
+  scale_in_count              = var.scale_in_count
+  scale_out_count             = var.scale_out_count
+
+  scheduled_scaling_enabled         = var.scheduled_scaling_enabled
+  scheduled_scaling_vmss_min_acs    = var.scheduled_scaling_vmss_min_acs
+  scheduled_scaling_timezone        = var.scheduled_scaling_timezone
+  scheduled_scaling_days_of_week    = var.scheduled_scaling_days_of_week
+  scheduled_scaling_start_time_hour = var.scheduled_scaling_start_time_hour
+  scheduled_scaling_start_time_min  = var.scheduled_scaling_start_time_min
+  scheduled_scaling_end_time_hour   = var.scheduled_scaling_end_time_hour
+  scheduled_scaling_end_time_min    = var.scheduled_scaling_end_time_min
 
   depends_on = [
     local_file.user_data_file,
   ]
 }
 
-
 ################################################################################
-# 6. Create Network Security Group and rules to be assigned to AC interface(s). 
+# 5. Create Network Security Group and rules to be assigned to AC interface(s). 
 #    Default behavior will create 1 of each resource per AC VM.
-#    Set variable "reuse_nsg" to true if you would like a single NSG 
-#    created and assigned to ALL App Connectors
 ################################################################################
 module "ac_nsg" {
   source         = "../../modules/terraform-zsac-nsg-azure"
-  nsg_count      = var.reuse_nsg == false ? var.ac_count : 1
+  nsg_count      = 1
   name_prefix    = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
   resource_tag   = random_string.suffix.result
-  resource_group = module.network.resource_group_name
+  resource_group = var.byo_nsg == false ? module.network.resource_group_name : var.byo_nsg_rg
   location       = var.arm_location
   global_tags    = local.global_tags
+
+  # optional inputs. only required if byo_nsg set to true
+  byo_nsg       = var.byo_nsg
+  byo_nsg_names = var.byo_nsg_names
 }

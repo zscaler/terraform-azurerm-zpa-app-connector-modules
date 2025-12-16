@@ -15,14 +15,27 @@ By default, these templates store two critical files to the "examples" directory
    You (and subsequently Zscaler) will NOT be able to remotely access these VMs once deployed without valid SSH access.
 ***Disclaimer***
 
+
+1) Copy the SSH key to the bastion host
+scp -i ${var.name_prefix}-key-${random_string.suffix.result}.pem ${var.name_prefix}-key-${random_string.suffix.result}.pem ubuntu@${module.bastion.public_ip}:/home/ubuntu/.
+
+2) SSH to the bastion host
+ssh -i ${var.name_prefix}-key-${random_string.suffix.result}.pem ubuntu@${module.bastion.public_ip}
+
 Resource Group: 
 ${module.network.resource_group_name}
 
-All App Connector Management IPs. Username "zsroot"
-${join("\n", module.ac_vm.private_ip)}
+VMSS Names:
+${join("\n", module.ac_vmss.vmss_names)}
+
+VMSS IDs:
+${join("\n", module.ac_vmss.vmss_ids)}
 
 All NAT GW Public IPs:
 ${join("\n", module.network.public_ip_address)}
+
+Bastion Public IP: 
+${module.bastion.public_ip}
 
 TB
 }

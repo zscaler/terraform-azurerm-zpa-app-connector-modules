@@ -89,16 +89,6 @@ variable "acvm_image_version" {
   default     = "latest"
 }
 
-variable "ac_count" {
-  type        = number
-  description = "The number of App Connectors to deploy.  Validation assumes max for /24 subnet but could be smaller or larger as long as subnet can accommodate"
-  default     = 1
-  validation {
-    condition     = var.ac_count >= 1 && var.ac_count <= 250
-    error_message = "Input ac_count must be a whole number between 1 and 250."
-  }
-}
-
 variable "zones_enabled" {
   type        = bool
   description = "Determine whether to provision App Connector VMs explicitly in defined zones (if supported by the Azure region provided in the location variable). If left false, Azure will automatically choose a zone and module will create an availability set resource instead for VM fault tolerance"
@@ -117,10 +107,10 @@ variable "zones" {
   }
 }
 
-variable "reuse_nsg" {
+variable "encryption_at_host_enabled" {
   type        = bool
-  description = "Specifies whether the NSG module should create 1:1 network security groups per instance or 1 network security group for all instances"
-  default     = "false"
+  description = "User input for enabling or disabling host encryption"
+  default     = true
 }
 
 # ZPA Provider specific variables for App Connector Group and Provisioning Key creation
@@ -374,4 +364,122 @@ variable "byo_nsg_names" {
   type        = list(string)
   description = "Management Network Security Group ID for App Connector association"
   default     = null
+}
+
+
+################################################################################
+# Auto Scaling (VMSS) variables list
+################################################################################
+variable "vmss_default_acs" {
+  type        = number
+  description = "Default number of ACs in vmss."
+  default     = 2
+}
+
+variable "vmss_min_acs" {
+  type        = number
+  description = "Minimum number of ACs in vmss."
+  default     = 2
+}
+
+variable "vmss_max_acs" {
+  type        = number
+  description = "Maximum number of ACs in vmss."
+  default     = 10
+}
+
+variable "scale_out_evaluation_period" {
+  type        = string
+  description = "Amount of time the average of scaling metric is evaluated over."
+  default     = "PT5M"
+}
+
+variable "scale_out_threshold" {
+  type        = number
+  description = "Metric threshold for determining scale out."
+  default     = 70
+}
+
+variable "scale_out_count" {
+  type        = string
+  description = "Number of ACs to bring up on scale out event."
+  default     = "1"
+}
+
+variable "scale_out_cooldown" {
+  type        = string
+  description = "Amount of time after scale out before scale out is evaluated again."
+  default     = "PT15M"
+}
+
+variable "scale_in_evaluation_period" {
+  type        = string
+  description = "Amount of time the average of scaling metric is evaluated over."
+  default     = "PT5M"
+}
+
+variable "scale_in_threshold" {
+  type        = number
+  description = "Metric threshold for determining scale in."
+  default     = 50
+}
+
+variable "scale_in_count" {
+  type        = string
+  description = "Number of ACs to bring up on scale in event."
+  default     = "1"
+}
+
+variable "scale_in_cooldown" {
+  type        = string
+  description = "Amount of time after scale in before scale in is evaluated again."
+  default     = "PT15M"
+}
+
+variable "scheduled_scaling_enabled" {
+  type        = bool
+  description = "Enable scheduled scaling on top of metric scaling."
+  default     = false
+}
+
+variable "scheduled_scaling_vmss_min_acs" {
+  type        = number
+  description = "Minimum number of ACs in vmss for scheduled scaling profile."
+  default     = 2
+}
+
+variable "scheduled_scaling_timezone" {
+  type        = string
+  description = "Timezone the times for the scheduled scaling profile are specified in."
+  default     = "Pacific Standard Time"
+}
+
+variable "scheduled_scaling_days_of_week" {
+  type        = list(string)
+  description = "Days of the week to apply scheduled scaling profile."
+  default     = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+}
+
+variable "scheduled_scaling_start_time_hour" {
+  type        = number
+  description = "Hour to start scheduled scaling profile."
+  default     = 9
+}
+
+variable "scheduled_scaling_start_time_min" {
+  type        = number
+  description = "Minute to start scheduled scaling profile."
+  default     = 0
+}
+
+variable "scheduled_scaling_end_time_hour" {
+  type        = number
+  description = "Hour to end scheduled scaling profile."
+  default     = 17
+}
+
+variable "scheduled_scaling_end_time_min" {
+  type        = number
+  description = "Minute to end scheduled scaling profile."
+  default     = 0
 }

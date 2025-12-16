@@ -15,11 +15,15 @@ By default, these templates store two critical files to the "examples" directory
    You (and subsequently Zscaler) will NOT be able to remotely access these VMs once deployed without valid SSH access.
 ***Disclaimer***
 
+
 Resource Group: 
 ${module.network.resource_group_name}
 
-All App Connector Management IPs. Username "zsroot"
-${join("\n", module.ac_vm.private_ip)}
+VMSS Names:
+${join("\n", module.ac_vmss.vmss_names)}
+
+VMSS IDs:
+${join("\n", module.ac_vmss.vmss_ids)}
 
 All NAT GW Public IPs:
 ${join("\n", module.network.public_ip_address)}

@@ -7,7 +7,7 @@ variable "arm_location" {
 variable "name_prefix" {
   type        = string
   description = "The name prefix for all your resources"
-  default     = "zsdemo"
+  default     = "zsac"
 }
 
 variable "network_address_space" {
