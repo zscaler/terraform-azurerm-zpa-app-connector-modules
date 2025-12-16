@@ -18,7 +18,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.113.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.0 |
 
@@ -26,7 +26,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.113.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
 
 ## Modules
 

@@ -74,6 +74,12 @@ jobs:
           terraform init
           terraform validate -no-color
 
+      - name: Terraform Init and Validate - ACVMSS
+        run: |
+          cd modules/terraform-zsac-acvmss-azure
+          terraform init
+          terraform validate -no-color
+
       - name: Install Go dependencies
         run: |
           go mod tidy
@@ -121,6 +127,16 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
+      - name: Run Terratest - ACVMSS
+        run: |
+          cd test/terraform-zsac-acvmss-azure
+          go test -v -run TestValidate -timeout 5m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
       - name: Run Terratest - ZPA App Connector Group (Full Test)
         run: |
           cd test/terraform-zpa-app-connector-group
@@ -159,6 +175,16 @@ jobs:
         run: |
           cd test/terraform-zsac-network-azure
           go test -v -run TestApply -timeout 30m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Run Terratest - ACVMSS (Full Test)
+        run: |
+          cd test/terraform-zsac-acvmss-azure
+          go test -v -run TestApply -timeout 45m
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
