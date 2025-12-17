@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+### [1.2.1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.2.0...v1.2.1) (2025-12-17)
+
+
+### Bug Fixes
+
+* update Azure VM instance types with newer generations and AMD options ([#16](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/issues/16)) ([fb44b81](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/commit/fb44b8164760da47039105b5f5e9b3fa27e26674))
+
 ## [1.2.0](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.1.1...v1.2.0) (2025-12-17)
 
 
