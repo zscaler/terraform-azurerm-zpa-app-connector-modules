@@ -68,3 +68,4 @@ terraform.tfplan
 .vscode/
 *.swp
 *.swo
+/vendor
