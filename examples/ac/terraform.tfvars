@@ -68,11 +68,19 @@
 
 ## 6. App Connector Azure VM Instance size selection. Uncomment acvm_instance_type line with desired vm size to change.
 ##    (Default: Standard_D4s_v5)
-
-#acvm_instance_type                         = "Standard_D4s_v5"
+##
+##    4-core Intel instances (Zscaler recommended):
+#acvm_instance_type                         = "Standard_D4s_v5"   # Default - latest gen Intel
 #acvm_instance_type                         = "Standard_D4s_v4"
-#acvm_instance_type                         = "Standard_D4s_v3"
-#acvm_instance_type                         = "Standard_F4s_v2"
+#acvm_instance_type                         = "Standard_D4s_v3"   # Zscaler recommended
+#acvm_instance_type                         = "Standard_F4s_v2"   # Zscaler recommended (retiring Nov 2028)
+##
+##    4-core AMD instances (10-15% cheaper, excellent performance):
+#acvm_instance_type                         = "Standard_D4as_v5"  # Cost-optimized option
+##
+##    8-core instances (for AppProtection workloads - recommended 8 CPU cores and 8GB RAM):
+#acvm_instance_type                         = "Standard_D8s_v5"   # Intel
+#acvm_instance_type                         = "Standard_D8as_v5"  # AMD (cost-optimized)
 
 ## 7. The number of App Connector appliances to provision. Each incremental App Connector will be created in alternating 
 ##     subnets based on the zones or byo_subnet_names variable and loop through for any deployments where ac_count > zones.

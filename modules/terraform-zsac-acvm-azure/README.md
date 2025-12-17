@@ -54,7 +54,7 @@ No modules.
 | <a name="input_acvm_image_publisher"></a> [acvm\_image\_publisher](#input\_acvm\_image\_publisher) | Azure Marketplace Zscaler App Connector Image Publisher | `string` | `"zscaler"` | no |
 | <a name="input_acvm_image_sku"></a> [acvm\_image\_sku](#input\_acvm\_image\_sku) | Azure Marketplace Zscaler App Connector Image SKU | `string` | `"zpa-con-azure"` | no |
 | <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version | `string` | `"latest"` | no |
-| <a name="input_acvm_instance_type"></a> [acvm\_instance\_type](#input\_acvm\_instance\_type) | App Connector Image size | `string` | `"Standard_D4s_v5"` | no |
+| <a name="input_acvm_instance_type"></a> [acvm\_instance\_type](#input\_acvm\_instance\_type) | App Connector Image size. Default is Standard\_D4s\_v5 (4 vCPU Intel). AMD alternatives (Standard\_D4as\_v5) are typically 10-15% cheaper. For AppProtection workloads, use 8-core instances (Standard\_D8s\_v5 or Standard\_D8as\_v5). | `string` | `"Standard_D4s_v5"` | no |
 | <a name="input_global_tags"></a> [global\_tags](#input\_global\_tags) | Populate any custom user defined tags from a map | `map(string)` | `{}` | no |
 | <a name="input_location"></a> [location](#input\_location) | App Connector Azure Region | `string` | n/a | yes |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | A prefix to associate to all the AC VM module resources | `string` | `null` | no |

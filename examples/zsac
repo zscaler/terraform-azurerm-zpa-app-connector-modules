@@ -428,11 +428,16 @@ first_run="yes"
         done
 
         acvm_instance_type_default=Standard_D4s_v5
+        echo "${CYAN}Available VM types:${RESET}"
+        echo "  ${GREEN}4-core Intel (Zscaler recommended):${RESET} Standard_F4s_v2, Standard_D4s_v3, Standard_D4s_v4, Standard_D4s_v5"
+        echo "  ${GREEN}4-core AMD (cost-optimized):${RESET} Standard_D4as_v5"
+        echo "  ${GREEN}8-core Intel (AppProtection):${RESET} Standard_D8s_v5"
+        echo "  ${GREEN}8-core AMD (AppProtection, cost-optimized):${RESET} Standard_D8as_v5"
         while true; do
             read -r -p "${CYAN}Enter desired Azure VM type for AC. [Default=$acvm_instance_type_default]: ${RESET}" acvm_instance_type_input
             acvm_instance_type=${acvm_instance_type_input:-$acvm_instance_type_default}
             case $acvm_instance_type in 
-                Standard_D4s_v3|Standard_F4s_v2|Standard_D4s_v4|Standard_D4s_v5 ) 
+                Standard_F4s_v2|Standard_D4s_v3|Standard_D4s_v4|Standard_D4s_v5|Standard_D4as_v5|Standard_D8s_v5|Standard_D8as_v5 ) 
                     echo "${GREEN}App Connector VM type: ${acvm_instance_type} selected...${RESET}"
                     echo "export TF_VAR_acvm_instance_type=${acvm_instance_type}" >> .zsacrc
                 break
