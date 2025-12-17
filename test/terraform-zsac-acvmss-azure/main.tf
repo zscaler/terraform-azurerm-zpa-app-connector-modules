@@ -26,12 +26,12 @@ provider "azurerm" {
 
 # Random name allows parallel runs on the same cloud account
 resource "random_pet" "this" {
-  prefix = var.name_prefix
   length = 2
 }
 
 locals {
-  name_prefix  = "${var.name_prefix}-${random_pet.this.id}"
+  # Keep name short to avoid exceeding Azure's 58-char limit for computer_name_prefix
+  name_prefix  = "vmss-${random_pet.this.id}"
   resource_tag = var.resource_tag
 }
 

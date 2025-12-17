@@ -1,4 +1,4 @@
-name_prefix        = "zsac-vmss-test"
+name_prefix        = "vmss"
 resource_tag       = "terratest"
 arm_location       = "westus2"
 acvm_instance_type = "Standard_D4s_v5"
