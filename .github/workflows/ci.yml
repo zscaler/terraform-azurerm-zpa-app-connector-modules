@@ -39,6 +39,10 @@ jobs:
         with:
           creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
 
+      - name: Accept Zscaler Marketplace Terms
+        run: |
+          az vm image terms accept --publisher zscaler --offer zscaler-private-access --plan zpa-con-azure || true
+
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
