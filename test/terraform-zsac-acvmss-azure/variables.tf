@@ -51,3 +51,9 @@ variable "zones" {
   description = "Availability zones"
   default     = ["1"]
 }
+
+variable "encryption_at_host_enabled" {
+  type        = bool
+  description = "Enable encryption at host for VMSS"
+  default     = false
+}

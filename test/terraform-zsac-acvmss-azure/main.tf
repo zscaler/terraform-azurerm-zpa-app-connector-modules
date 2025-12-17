@@ -116,12 +116,13 @@ module "acvmss" {
   EOF
   )
 
-  acvm_instance_type = var.acvm_instance_type
-  vmss_default_acs   = var.vmss_default_acs
-  vmss_min_acs       = var.vmss_min_acs
-  vmss_max_acs       = var.vmss_max_acs
-  zones_enabled      = var.zones_enabled
-  zones              = var.zones
+  acvm_instance_type         = var.acvm_instance_type
+  vmss_default_acs           = var.vmss_default_acs
+  vmss_min_acs               = var.vmss_min_acs
+  vmss_max_acs               = var.vmss_max_acs
+  zones_enabled              = var.zones_enabled
+  zones                      = var.zones
+  encryption_at_host_enabled = var.encryption_at_host_enabled
 
   global_tags = {
     Environment = "test"
