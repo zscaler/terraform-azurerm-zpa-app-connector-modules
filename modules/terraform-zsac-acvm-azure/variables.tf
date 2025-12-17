@@ -44,16 +44,23 @@ variable "ssh_key" {
 
 variable "acvm_instance_type" {
   type        = string
-  description = "App Connector Image size"
+  description = "App Connector Image size. Default is Standard_D4s_v5 (4 vCPU Intel). AMD alternatives (Standard_D4as_v5) are typically 10-15% cheaper. For AppProtection workloads, use 8-core instances (Standard_D8s_v5 or Standard_D8as_v5)."
   default     = "Standard_D4s_v5"
   validation {
-    condition = (
-      var.acvm_instance_type == "Standard_D4s_v3" ||
-      var.acvm_instance_type == "Standard_D4s_v4" ||
-      var.acvm_instance_type == "Standard_D4s_v5" ||
-      var.acvm_instance_type == "Standard_F4s_v2"
-    )
-    error_message = "Input acvm_instance_type must be set to an approved vm size."
+    condition = contains([
+      # 4-core Intel instances (standard workloads) - Zscaler recommended
+      "Standard_F4s_v2", # Zscaler recommended (retiring Nov 2028)
+      "Standard_D4s_v3", # Zscaler recommended
+      "Standard_D4s_v4",
+      "Standard_D4s_v5",
+      # 4-core AMD instances (cost-optimized, standard workloads)
+      "Standard_D4as_v5",
+      # 8-core Intel instances (AppProtection workloads)
+      "Standard_D8s_v5",
+      # 8-core AMD instances (AppProtection workloads, cost-optimized)
+      "Standard_D8as_v5"
+    ], var.acvm_instance_type)
+    error_message = "Input acvm_instance_type must be set to an approved vm size. Valid options: Standard_F4s_v2, Standard_D4s_v3, Standard_D4s_v4, Standard_D4s_v5, Standard_D4as_v5, Standard_D8s_v5, Standard_D8as_v5."
   }
 }
 
