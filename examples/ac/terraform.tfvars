@@ -67,8 +67,10 @@
 #arm_location                               = "westus2"
 
 ## 6. App Connector Azure VM Instance size selection. Uncomment acvm_instance_type line with desired vm size to change.
-##    (Default: Standard_D4s_v3)
+##    (Default: Standard_D4s_v5)
 
+#acvm_instance_type                         = "Standard_D4s_v5"
+#acvm_instance_type                         = "Standard_D4s_v4"
 #acvm_instance_type                         = "Standard_D4s_v3"
 #acvm_instance_type                         = "Standard_F4s_v2"
 

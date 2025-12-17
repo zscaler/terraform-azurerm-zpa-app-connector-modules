@@ -1,0 +1,10 @@
+name_prefix                = "vmss"
+resource_tag               = "terratest"
+arm_location               = "westus2"
+acvm_instance_type         = "Standard_D4s_v5"
+vmss_default_acs           = 2
+vmss_min_acs               = 2
+vmss_max_acs               = 4
+zones_enabled              = false
+zones                      = ["1"]
+encryption_at_host_enabled = false

@@ -53,11 +53,13 @@ variable "ssh_key" {
 variable "acvm_instance_type" {
   type        = string
   description = "App Connector Image size"
-  default     = "Standard_D4s_v3"
+  default     = "Standard_D4s_v5"
   validation {
     condition = (
       var.acvm_instance_type == "Standard_D4s_v3" ||
-      var.acvm_instance_type == "Standard_F4s_v2"
+      var.acvm_instance_type == "Standard_F4s_v2" ||
+      var.acvm_instance_type == "Standard_D4s_v4" ||
+      var.acvm_instance_type == "Standard_D4s_v5"
     )
     error_message = "Input acvm_instance_type must be set to an approved vm size."
   }

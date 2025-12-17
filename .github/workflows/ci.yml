@@ -1,89 +1,201 @@
-name: Terraform checks
-on: [push, pull_request]
+name: Terraform checks and tests
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+  schedule:
+    - cron: '0 4 * * 1' # Every Monday at 04:00 UTC (Sunday 8:00 PM PST)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
-  terraform-linter:
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Azure Login
+        uses: azure/login@v2
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        with:
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}","clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}","subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
+
+      - name: Accept Zscaler Marketplace Terms
+        run: |
+          az vm image terms accept --publisher zscaler --offer zscaler-private-access --plan zpa-con-azure || true
 
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
 
-      - name: Terraform Init
-        id: init-zpa-app-connector-group
-        run: |
-          cd modules/terraform-zpa-app-connector-group
-          terraform init
-
-      - name: Terraform Validate
-        id: validate-zpa-app-connector-group
-        run: |
-          cd modules/terraform-zpa-app-connector-group
-          terraform validate -no-color
-
-      - name: Terraform Init
-        id: init-zpa-provisioning-key
-        run: |
-          cd modules/terraform-zpa-provisioning-key
-          terraform init
-
-      - name: Terraform Validate
-        id: validate-zpa-provisioning-key
-        run: |
-          cd modules/terraform-zpa-provisioning-key
-          terraform validate -no-color
-
-      - name: Terraform Init
-        id: init-zsac-acvm-azure
-        run: |
-          cd modules/terraform-zsac-acvm-azure
-          terraform init
-
-      - name: Terraform Validate
-        id: validate-zsac-acvm-azure
-        run: |
-          cd modules/terraform-zsac-acvm-azure
-          terraform validate -no-color
-
-      - name: Terraform Init
-        id: init-zsac-bastion-azure
+      - name: Terraform Init and Validate - Bastion
         run: |
           cd modules/terraform-zsac-bastion-azure
           terraform init
-
-      - name: Terraform Validate
-        id: validate-zsac-bastion-azure
-        run: |
-          cd modules/terraform-zsac-bastion-azure
           terraform validate -no-color
 
-      - name: Terraform Init
-        id: init-zsac-network-azure
+      - name: Terraform Init and Validate - ACVM
+        run: |
+          cd modules/terraform-zsac-acvm-azure
+          terraform init
+          terraform validate -no-color
+
+      - name: Terraform Init and Validate - Network
         run: |
           cd modules/terraform-zsac-network-azure
           terraform init
-
-      - name: Terraform Validate
-        id: validate-zsac-network-azure
-        run: |
-          cd modules/terraform-zsac-network-azure
           terraform validate -no-color
 
-      - name: Terraform Init
-        id: init-zsac-nsg-azure
+      - name: Terraform Init and Validate - NSG
         run: |
           cd modules/terraform-zsac-nsg-azure
           terraform init
-
-      - name: Terraform Validate
-        id: validate-zsac-nsg-azure
-        run: |
-          cd modules/terraform-zsac-nsg-azure
           terraform validate -no-color
+
+      - name: Terraform Init and Validate - App Connector Group
+        run: |
+          cd modules/terraform-zpa-app-connector-group
+          terraform init
+          terraform validate -no-color
+
+      - name: Terraform Init and Validate - Provisioning Key
+        run: |
+          cd modules/terraform-zpa-provisioning-key
+          terraform init
+          terraform validate -no-color
+
+      - name: Terraform Init and Validate - ACVMSS
+        run: |
+          cd modules/terraform-zsac-acvmss-azure
+          terraform init
+          terraform validate -no-color
+
+      - name: Install Go dependencies
+        run: |
+          go mod tidy
+          go mod download
+
+      - name: Run Terratest - ZPA App Connector Group
+        run: |
+          cd test/terraform-zpa-app-connector-group
+          go test -v -run TestValidate -timeout 5m
+        env:
+          ZSCALER_CLIENT_ID: ${{ secrets.ZSCALER_CLIENT_ID }}
+          ZSCALER_CLIENT_SECRET: ${{ secrets.ZSCALER_CLIENT_SECRET }}
+          ZSCALER_VANITY_DOMAIN: ${{ secrets.ZSCALER_VANITY_DOMAIN }}
+          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+          ZSCALER_CLOUD: ${{ secrets.ZSCALER_CLOUD }}
+
+      - name: Run Terratest - ZPA Provisioning Key
+        run: |
+          cd test/terraform-zpa-provisioning-key
+          go test -v -run TestValidate -timeout 5m
+        env:
+          ZSCALER_CLIENT_ID: ${{ secrets.ZSCALER_CLIENT_ID }}
+          ZSCALER_CLIENT_SECRET: ${{ secrets.ZSCALER_CLIENT_SECRET }}
+          ZSCALER_VANITY_DOMAIN: ${{ secrets.ZSCALER_VANITY_DOMAIN }}
+          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+          ZSCALER_CLOUD: ${{ secrets.ZSCALER_CLOUD }}
+
+      - name: Run Terratest - NSG
+        run: |
+          cd test/terraform-zsac-nsg-azure
+          go test -v -run TestValidate -timeout 5m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Run Terratest - Network
+        run: |
+          cd test/terraform-zsac-network-azure
+          go test -v -run TestValidate -timeout 5m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Run Terratest - ACVMSS
+        run: |
+          cd test/terraform-zsac-acvmss-azure
+          go test -v -run TestValidate -timeout 5m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Run Terratest - ZPA App Connector Group (Full Test)
+        run: |
+          cd test/terraform-zpa-app-connector-group
+          go test -v -run TestApply -timeout 10m
+        env:
+          ZSCALER_CLIENT_ID: ${{ secrets.ZSCALER_CLIENT_ID }}
+          ZSCALER_CLIENT_SECRET: ${{ secrets.ZSCALER_CLIENT_SECRET }}
+          ZSCALER_VANITY_DOMAIN: ${{ secrets.ZSCALER_VANITY_DOMAIN }}
+          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+          ZSCALER_CLOUD: ${{ secrets.ZSCALER_CLOUD }}
+        continue-on-error: true # Continue on error due to potential ZPA API issues
+
+      - name: Run Terratest - ZPA Provisioning Key (Full Test)
+        run: |
+          cd test/terraform-zpa-provisioning-key
+          go test -v -run TestApply -timeout 10m
+        env:
+          ZSCALER_CLIENT_ID: ${{ secrets.ZSCALER_CLIENT_ID }}
+          ZSCALER_CLIENT_SECRET: ${{ secrets.ZSCALER_CLIENT_SECRET }}
+          ZSCALER_VANITY_DOMAIN: ${{ secrets.ZSCALER_VANITY_DOMAIN }}
+          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+          ZSCALER_CLOUD: ${{ secrets.ZSCALER_CLOUD }}
+        continue-on-error: true # Continue on error due to potential ZPA API issues
+
+      - name: Run Terratest - NSG (Full Test)
+        run: |
+          cd test/terraform-zsac-nsg-azure
+          go test -v -run TestApply -timeout 30m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Run Terratest - Network (Full Test)
+        run: |
+          cd test/terraform-zsac-network-azure
+          go test -v -run TestApply -timeout 30m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+      - name: Run Terratest - ACVMSS (Full Test)
+        run: |
+          cd test/terraform-zsac-acvmss-azure
+          go test -v -run TestApply -timeout 45m
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

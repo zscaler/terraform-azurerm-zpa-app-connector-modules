@@ -427,12 +427,12 @@ first_run="yes"
             esac
         done
 
-        acvm_instance_type_default=Standard_D4s_v3
+        acvm_instance_type_default=Standard_D4s_v5
         while true; do
             read -r -p "${CYAN}Enter desired Azure VM type for AC. [Default=$acvm_instance_type_default]: ${RESET}" acvm_instance_type_input
             acvm_instance_type=${acvm_instance_type_input:-$acvm_instance_type_default}
             case $acvm_instance_type in 
-                Standard_D4s_v3|Standard_F4s_v2 ) 
+                Standard_D4s_v3|Standard_F4s_v2|Standard_D4s_v4|Standard_D4s_v5 ) 
                     echo "${GREEN}App Connector VM type: ${acvm_instance_type} selected...${RESET}"
                     echo "export TF_VAR_acvm_instance_type=${acvm_instance_type}" >> .zsacrc
                 break
