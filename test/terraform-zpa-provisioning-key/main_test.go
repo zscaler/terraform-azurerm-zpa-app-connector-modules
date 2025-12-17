@@ -45,6 +45,10 @@ func TestApply(t *testing.T) {
 	defer terraform.Destroy(t, terraformOptions)
 	terraform.InitAndApply(t, terraformOptions)
 
+	// verify App Connector Group was created
+	appConnectorGroupId := terraform.Output(t, terraformOptions, "app_connector_group_id")
+	assert.NotEmpty(t, appConnectorGroupId, "App Connector Group ID should not be empty")
+
 	// verify outputs using validation outputs
 	provisioningKeyValid := terraform.Output(t, terraformOptions, "provisioning_key_valid")
 	assert.Equal(t, "true", provisioningKeyValid, "Provisioning Key should be valid")
