@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.1.1...v1.2.0) (2025-12-17)
+
+
+### Features
+
+* Fixed Azure Instance Types, Added VMSS support, and Terratest integration tests ([#15](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/issues/15)) ([bef328c](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/commit/bef328c85758534de1ff283fe8d341d92d3b8568))
+
 ### [1.1.1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.1.0...v1.1.1) (2024-10-06)
 
 
