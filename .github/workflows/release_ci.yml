@@ -1,0 +1,30 @@
+name: Release CI
+run-name: "Continous Release"
+
+permissions:
+  contents: write
+  issues: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * 4" # this means every Thursday @1am UTC
+
+concurrency: release
+
+jobs:
+  release_wrkflw:
+    name: Do release
+    uses: zscaler/terraform-modules-zscaler-ci-workflows/.github/workflows/release_ci.yml@v0.1
+    secrets: inherit
+    with:
+      cloud: azure
+      validate_max_parallel: 20
+      # Each example provisions its own VNet/NAT Gateway/Public IP plus an
+      # ephemeral Key Vault during the Idempotence apply. Cap concurrent apply
+      # jobs to keep within the subscription's default network/Public IP quotas
+      # and avoid soft-deleted Key Vault name collisions.
+      test_max_parallel: 2
+      fail_fast: false
+      terratest_action: Idempotence # keep in mind that this has to start with capital letter
