@@ -1,7 +1,15 @@
 ################################################################################
-# Make sure that ZPA App Connector image terms have been accepted
+# Make sure that ZPA App Connector image terms have been accepted.
+#
+# A marketplace agreement is a subscription-level singleton: once the terms for
+# a plan are accepted they persist for the whole subscription. Most subscriptions
+# already have these terms accepted, in which case Terraform creating the resource
+# fails with "a resource with the ID ... already exists". This is therefore opt-in
+# (disabled by default); set accept_marketplace_agreement = true only for a brand
+# new subscription where the terms have never been accepted.
 ################################################################################
 resource "azurerm_marketplace_agreement" "zs_image_agreement" {
+  count     = var.accept_marketplace_agreement ? 1 : 0
   offer     = var.acvm_image_offer
   plan      = var.acvm_image_sku
   publisher = var.acvm_image_publisher
@@ -98,6 +106,10 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
     azurerm_marketplace_agreement.zs_image_agreement,
   ]
 }
+# NOTE: depends_on above tolerates the agreement being absent (count = 0) when
+# accept_marketplace_agreement is false; Terraform simply has no instance to
+# wait on, which is the desired behavior for subscriptions where terms are
+# already accepted.
 
 
 ################################################################################

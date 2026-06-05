@@ -74,6 +74,12 @@ variable "acvm_instance_type" {
   }
 }
 
+variable "accept_marketplace_agreement" {
+  type        = bool
+  description = "Whether to accept the Zscaler App Connector Azure Marketplace image terms. Leave false if the terms are already accepted in the subscription (the common case); set true only for a new subscription where they have never been accepted."
+  default     = false
+}
+
 variable "acvm_image_publisher" {
   type        = string
   description = "Azure Marketplace Zscaler App Connector Image Publisher"

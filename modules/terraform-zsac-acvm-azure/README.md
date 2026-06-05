@@ -50,6 +50,7 @@ No modules.
 | <a name="input_ac_nsg_id"></a> [ac\_nsg\_id](#input\_ac\_nsg\_id) | App Connector management interface nsg id | `list(string)` | n/a | yes |
 | <a name="input_ac_subnet_id"></a> [ac\_subnet\_id](#input\_ac\_subnet\_id) | App Connector subnet id | `list(string)` | n/a | yes |
 | <a name="input_ac_username"></a> [ac\_username](#input\_ac\_username) | Default App Connector admin/root username | `string` | `"zsroot"` | no |
+| <a name="input_accept_marketplace_agreement"></a> [accept\_marketplace\_agreement](#input\_accept\_marketplace\_agreement) | Whether to accept the Zscaler App Connector Azure Marketplace image terms. A marketplace agreement is a subscription-level singleton; if the terms are already accepted in the subscription, leave this false to avoid an 'already exists' error. Set to true only for a new subscription where the terms have never been accepted. | `bool` | `false` | no |
 | <a name="input_acvm_image_offer"></a> [acvm\_image\_offer](#input\_acvm\_image\_offer) | Azure Marketplace Zscaler App Connector Image Offer | `string` | `"zscaler-private-access"` | no |
 | <a name="input_acvm_image_publisher"></a> [acvm\_image\_publisher](#input\_acvm\_image\_publisher) | Azure Marketplace Zscaler App Connector Image Publisher | `string` | `"zscaler"` | no |
 | <a name="input_acvm_image_sku"></a> [acvm\_image\_sku](#input\_acvm\_image\_sku) | Azure Marketplace Zscaler App Connector Image SKU | `string` | `"zpa-con-azure"` | no |

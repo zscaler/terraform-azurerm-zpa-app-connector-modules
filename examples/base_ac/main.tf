@@ -201,8 +201,10 @@ module "ac_vm" {
   acvm_image_publisher = var.acvm_image_publisher
   acvm_image_offer     = var.acvm_image_offer
   acvm_image_sku       = var.acvm_image_sku
-  acvm_image_version   = var.acvm_image_version
-  ac_nsg_id            = module.ac_nsg.ac_nsg_id
+
+  accept_marketplace_agreement = var.accept_marketplace_agreement
+  acvm_image_version           = var.acvm_image_version
+  ac_nsg_id                    = module.ac_nsg.ac_nsg_id
 
   depends_on = [
     module.zpa_provisioning_key,
