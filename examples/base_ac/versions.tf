@@ -22,7 +22,7 @@ terraform {
     }
     zpa = {
       source  = "zscaler/zpa"
-      version = "~> 4.0"
+      version = "~> 4.4.0"
     }
   }
   required_version = ">= 0.13.7, < 2.0.0"
@@ -33,6 +33,13 @@ provider "azurerm" {
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
+    }
+    # Allow ephemeral OAuth2 relay Key Vaults to be fully purged on destroy so
+    # repeated test/CI runs (and idempotence checks) do not collide with
+    # soft-deleted vaults of the same name.
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
     }
   }
 }

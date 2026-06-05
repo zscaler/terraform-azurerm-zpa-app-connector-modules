@@ -6,6 +6,22 @@
 #####################################################################################################################
 
 #####################################################################################################################
+##### App Connector onboarding method                                                                          #####
+#####################################################################################################################
+## By default this module onboards App Connectors using OAuth2 user codes (recommended). Each scale-set instance
+## publishes its /etc/issue user code to an Azure Key Vault via a user-assigned Managed Identity; Terraform reads
+## the codes back to create the App Connector Group. Set onboarding_method to "provisioning_key" to use the legacy
+## provisioning key flow instead. (Default: "oauth")
+#onboarding_method                              = "oauth"
+## OAuth2 flow: bring your own Key Vault for the user-code relay (optional). If false, a new RBAC-enabled Key
+## Vault is created and torn down with the deployment.
+#byo_key_vault                                  = false
+#byo_key_vault_name                             = "existing-keyvault-name"
+#byo_key_vault_rg                               = "existing-keyvault-rg"
+## How long (seconds) to wait for scale-set instances to publish their OAuth2 user codes before reading back.
+#oauth_token_wait_seconds                       = 420
+
+#####################################################################################################################
 ##### Optional: ZPA Provider Resources. Skip to step 3. if you already have an  #####
 ##### App Connector Group + Provisioning Key.                                   #####
 #####################################################################################################################

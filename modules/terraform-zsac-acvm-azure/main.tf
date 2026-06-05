@@ -59,7 +59,14 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
 
   computer_name  = "${var.name_prefix}-acvm-${count.index + 1}-${var.resource_tag}"
   admin_username = var.ac_username
-  custom_data    = base64encode(var.user_data)
+  custom_data    = base64encode(element(var.user_data, count.index))
+
+  # System-assigned Managed Identity. Used by the OAuth2 onboarding flow so the
+  # connector VM can publish its OAuth2 user code to Azure Key Vault without any
+  # embedded credentials. Harmless when onboarding via provisioning key.
+  identity {
+    type = "SystemAssigned"
+  }
 
   admin_ssh_key {
     username   = var.ac_username

@@ -18,7 +18,15 @@ locals {
     Vendor      = "Zscaler"
     Environment = var.environment
   }
+
+  # Onboarding method switch. Default is OAuth2; set onboarding_method to
+  # "provisioning_key" (or byo_provisioning_key = true) to use the legacy
+  # provisioning key flow instead.
+  use_provisioning_key = var.onboarding_method == "provisioning_key" || var.byo_provisioning_key
 }
+
+# Current client/tenant context for Key Vault tenant + deployer RBAC grants.
+data "azurerm_client_config" "current" {}
 
 
 ################################################################################
@@ -77,15 +85,38 @@ module "bastion" {
 
 
 ################################################################################
-# 3. Create ZPA App Connector Group
+# 3. Generate App Connector Group name + OAuth2 secret prefix
 ################################################################################
-module "zpa_app_connector_group" {
-  count                                        = var.byo_provisioning_key == true ? 0 : 1 # Only use this module if a new provisioning key is needed
+locals {
+  default_ac_group_name = "${var.arm_location}-${module.network.resource_group_name}"
+
+  custom_ac_group_name = var.app_connector_group_name != "" ? replace(
+    replace(
+      replace(var.app_connector_group_name, "{region}", var.arm_location),
+      "{name_prefix}", var.name_prefix
+    ),
+    "{random_suffix}", random_string.suffix.result
+  ) : coalesce(var.custom_name, local.default_ac_group_name)
+
+  # Unique per-deployment prefix used to name OAuth2 secrets written by each
+  # scale-set instance. Each instance appends its own Azure resource name at
+  # boot so concurrent scale-out instances never collide.
+  oauth_secret_prefix = "${var.name_prefix}-${var.arm_location}-acvmss-${random_string.suffix.result}"
+}
+
+
+################################################################################
+# 4. (Provisioning key flow only) Create the ZPA App Connector Group and
+#    Provisioning Key up front so the key can be baked into the VMSS user_data.
+################################################################################
+module "zpa_app_connector_group_pk" {
+  count                                        = local.use_provisioning_key && var.byo_provisioning_key == false ? 1 : 0
   source                                       = "../../modules/terraform-zpa-app-connector-group"
-  app_connector_group_name                     = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
+  app_connector_group_name                     = local.custom_ac_group_name
   app_connector_group_description              = "${var.app_connector_group_description}-${var.arm_location}-${module.network.resource_group_name}"
   app_connector_group_enabled                  = var.app_connector_group_enabled
   app_connector_group_country_code             = var.app_connector_group_country_code
+  app_connector_group_city_country             = var.app_connector_group_city_country
   app_connector_group_latitude                 = var.app_connector_group_latitude
   app_connector_group_longitude                = var.app_connector_group_longitude
   app_connector_group_location                 = var.app_connector_group_location
@@ -96,50 +127,74 @@ module "zpa_app_connector_group" {
   app_connector_group_dns_query_type           = var.app_connector_group_dns_query_type
 }
 
-
-################################################################################
-# 4. Create ZPA Provisioning Key (or reference existing if byo set)
-################################################################################
 module "zpa_provisioning_key" {
+  count                             = local.use_provisioning_key ? 1 : 0
   source                            = "../../modules/terraform-zpa-provisioning-key"
-  enrollment_cert                   = var.enrollment_cert
-  provisioning_key_name             = coalesce(var.custom_name, "${var.name_prefix}-${var.arm_location}-${module.network.resource_group_name}")
+  provisioning_key_name             = var.provisioning_key_name != "" ? var.provisioning_key_name : local.custom_ac_group_name
   provisioning_key_enabled          = var.provisioning_key_enabled
   provisioning_key_association_type = var.provisioning_key_association_type
   provisioning_key_max_usage        = var.provisioning_key_max_usage
-  app_connector_group_id            = try(module.zpa_app_connector_group[0].app_connector_group_id, "")
+  app_connector_group_id            = try(module.zpa_app_connector_group_pk[0].app_connector_group_id, "")
   byo_provisioning_key              = var.byo_provisioning_key
   byo_provisioning_key_name         = var.byo_provisioning_key_name
 }
 
+
 ################################################################################
-# 5. Create specified number of AC VMs per vmss_default_acs by default in an
-#    availability set for Azure Data Center fault tolerance. Optionally, deployed
-#    ACs can automatically span equally across designated availabilty zones 
-#    if enabled via "zones_enabled" and "zones" variables where the number of
-#    VMSS created will equal the number of "zones" specified.
-#    E.g. 2 zones ['1","2"] and vmss_default_acs of 2 will create 2x Scale Sets
-#    EACH with 2x ACs where VMSS-1 ACs are assigned AZ1 and VMMS-2 ACs in AZ2
+# 5. (OAuth2 flow only) Create a Key Vault to relay OAuth2 user codes. VMSS
+#    instances write their /etc/issue code via Managed Identity; Terraform reads
+#    them back by listing secrets that match the deployment prefix.
 ################################################################################
-# Create the user_data file with necessary bootstrap variables for App Connector registration
 locals {
-  appuserdata = <<APPUSERDATA
-#!/bin/bash
-#Stop the App Connector service which was auto-started at boot time
-systemctl stop zpa-connector
-#Create a file from the App Connector provisioning key created in the ZPA Admin Portal
-#Make sure that the provisioning key is between double quotes
-echo "${module.zpa_provisioning_key.provisioning_key}" > /opt/zscaler/var/provision_key
-#Run a yum update to apply the latest patches
-yum update -y
-#Start the App Connector service to enroll it in the ZPA cloud
-systemctl start zpa-connector
-#Wait for the App Connector to download latest build
-sleep 60
-#Stop and then start the App Connector for the latest build
-systemctl stop zpa-connector
-systemctl start zpa-connector
-APPUSERDATA
+  generated_kv_name = substr("zsac-kv-${random_string.suffix.result}", 0, 24)
+
+  key_vault_name = local.use_provisioning_key ? "" : (
+    var.byo_key_vault ? var.byo_key_vault_name : local.generated_kv_name
+  )
+}
+
+# User-assigned identity attached to the scale set for the OAuth2 flow.
+resource "azurerm_user_assigned_identity" "vmss_oauth" {
+  count               = local.use_provisioning_key ? 0 : 1
+  name                = "${var.name_prefix}-acvmss-oauth-${random_string.suffix.result}"
+  resource_group_name = module.network.resource_group_name
+  location            = var.arm_location
+  tags                = local.global_tags
+}
+
+module "oauth_key_vault" {
+  count          = local.use_provisioning_key || var.byo_key_vault ? 0 : 1
+  source         = "../../modules/terraform-zsac-keyvault-azure"
+  name_prefix    = coalesce(var.custom_name, var.name_prefix)
+  resource_tag   = random_string.suffix.result
+  global_tags    = local.global_tags
+  key_vault_name = local.generated_kv_name
+
+  resource_group            = module.network.resource_group_name
+  location                  = var.arm_location
+  tenant_id                 = data.azurerm_client_config.current.tenant_id
+  deployer_object_id        = data.azurerm_client_config.current.object_id
+  vm_identity_principal_ids = [azurerm_user_assigned_identity.vmss_oauth[0].principal_id]
+}
+
+
+################################################################################
+# 6. Generate VMSS user_data via the centralized scripts. All instances share
+#    the same script; each derives a unique Key Vault secret name at boot.
+################################################################################
+locals {
+  provisioning_key_value = local.use_provisioning_key ? try(module.zpa_provisioning_key[0].provisioning_key, "") : ""
+  user_data_script       = var.use_zscaler_image ? "${path.module}/../../scripts/user_data_zscaler.sh" : "${path.module}/../../scripts/user_data_rhel9.sh"
+
+  appuserdata = templatefile(local.user_data_script, {
+    onboarding_method          = local.use_provisioning_key ? "provisioning_key" : "oauth"
+    provisioning_key           = local.provisioning_key_value
+    key_vault_name             = local.key_vault_name
+    secret_name                = ""
+    secret_name_prefix         = local.oauth_secret_prefix
+    is_vmss                    = true
+    managed_identity_client_id = local.use_provisioning_key ? "" : azurerm_user_assigned_identity.vmss_oauth[0].client_id
+  })
 }
 
 # Write the file to local filesystem for storage/reference
@@ -168,6 +223,7 @@ module "ac_vmss" {
   acvm_image_version         = var.acvm_image_version
   ac_nsg_id                  = module.ac_nsg.ac_nsg_id[0]
   encryption_at_host_enabled = var.encryption_at_host_enabled
+  identity_ids               = local.use_provisioning_key ? [] : [azurerm_user_assigned_identity.vmss_oauth[0].id]
 
   vmss_default_acs            = var.vmss_default_acs
   vmss_min_acs                = var.vmss_min_acs
@@ -192,6 +248,7 @@ module "ac_vmss" {
 
   depends_on = [
     local_file.user_data_file,
+    module.zpa_provisioning_key,
   ]
 }
 
@@ -210,4 +267,78 @@ module "ac_nsg" {
   resource_group = module.network.resource_group_name
   location       = var.arm_location
   global_tags    = local.global_tags
+}
+
+
+################################################################################
+# 7. (OAuth2 flow only) Wait for scale-set instances to publish their OAuth2
+#    user codes to Key Vault, then list and read back all secrets matching the
+#    deployment prefix and create the App Connector Group with the codes.
+################################################################################
+resource "time_sleep" "wait_for_oauth_tokens" {
+  count           = local.use_provisioning_key ? 0 : 1
+  depends_on      = [module.ac_vmss, module.oauth_key_vault]
+  create_duration = "${var.oauth_token_wait_seconds}s"
+}
+
+data "azurerm_key_vault" "oauth" {
+  count               = local.use_provisioning_key ? 0 : 1
+  name                = local.key_vault_name
+  resource_group_name = var.byo_key_vault ? var.byo_key_vault_rg : module.network.resource_group_name
+  depends_on          = [time_sleep.wait_for_oauth_tokens]
+}
+
+# List all secret names in the vault, then keep only those that belong to this
+# deployment (prefix match). Dynamic VMSS instance names are not known at plan
+# time, so we discover the published codes rather than enumerate them up front.
+data "azurerm_key_vault_secrets" "oauth" {
+  count        = local.use_provisioning_key ? 0 : 1
+  key_vault_id = data.azurerm_key_vault.oauth[0].id
+  depends_on   = [time_sleep.wait_for_oauth_tokens]
+}
+
+locals {
+  oauth_secret_names = local.use_provisioning_key ? [] : [
+    for name in data.azurerm_key_vault_secrets.oauth[0].names : name
+    if startswith(name, local.oauth_secret_prefix)
+  ]
+}
+
+data "azurerm_key_vault_secret" "oauth_tokens" {
+  for_each     = toset(local.oauth_secret_names)
+  name         = each.key
+  key_vault_id = data.azurerm_key_vault.oauth[0].id
+  depends_on   = [time_sleep.wait_for_oauth_tokens]
+}
+
+locals {
+  user_codes = local.use_provisioning_key ? [] : [for s in data.azurerm_key_vault_secret.oauth_tokens : s.value]
+}
+
+
+################################################################################
+# 8. (OAuth2 flow only) Create the ZPA App Connector Group with the collected
+#    OAuth2 user codes.
+################################################################################
+module "zpa_app_connector_group" {
+  count                                        = local.use_provisioning_key ? 0 : 1
+  source                                       = "../../modules/terraform-zpa-app-connector-group"
+  app_connector_group_name                     = local.custom_ac_group_name
+  app_connector_group_description              = "${var.app_connector_group_description}-${var.arm_location}-${module.network.resource_group_name}"
+  app_connector_group_enabled                  = var.app_connector_group_enabled
+  app_connector_group_country_code             = var.app_connector_group_country_code
+  app_connector_group_city_country             = var.app_connector_group_city_country
+  app_connector_group_latitude                 = var.app_connector_group_latitude
+  app_connector_group_longitude                = var.app_connector_group_longitude
+  app_connector_group_location                 = var.app_connector_group_location
+  app_connector_group_upgrade_day              = var.app_connector_group_upgrade_day
+  app_connector_group_upgrade_time_in_secs     = var.app_connector_group_upgrade_time_in_secs
+  app_connector_group_override_version_profile = var.app_connector_group_override_version_profile
+  app_connector_group_version_profile_id       = var.app_connector_group_version_profile_id
+  app_connector_group_dns_query_type           = var.app_connector_group_dns_query_type
+  user_codes                                   = local.user_codes
+
+  depends_on = [
+    data.azurerm_key_vault_secret.oauth_tokens,
+  ]
 }

@@ -30,6 +30,20 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "ac_vmss" {
     }
   }
 
+  # User-assigned Managed Identity. Orchestrated VMSS only supports
+  # UserAssigned identities (not SystemAssigned), so the OAuth2 onboarding flow
+  # attaches a pre-created identity that is granted Key Vault access. Each
+  # scale-set instance uses it to publish its OAuth2 user code to Key Vault
+  # without embedded credentials. Omitted when no identity ids are supplied
+  # (e.g. provisioning key onboarding).
+  dynamic "identity" {
+    for_each = length(var.identity_ids) > 0 ? [1] : []
+    content {
+      type         = "UserAssigned"
+      identity_ids = var.identity_ids
+    }
+  }
+
   os_profile {
     custom_data = base64encode(var.user_data)
     linux_configuration {

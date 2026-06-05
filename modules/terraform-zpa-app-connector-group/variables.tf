@@ -21,6 +21,12 @@ variable "app_connector_group_country_code" {
   default     = ""
 }
 
+variable "app_connector_group_city_country" {
+  type        = string
+  description = "Optional: City and country of this App Connector Group. example 'San Jose, US'"
+  default     = ""
+}
+
 variable "app_connector_group_latitude" {
   type        = string
   description = "Latitude of the App Connector Group. Integer or decimal. With values in the range of -90 to 90"
@@ -82,4 +88,10 @@ variable "app_connector_group_dns_query_type" {
     )
     error_message = "Input app_connector_group_dns_query_type must be set to an approved value."
   }
+}
+
+variable "user_codes" {
+  type        = list(string)
+  description = "Optional: List of OAuth2 user codes used to enroll App Connectors into this group. Populated automatically by the OAuth2 onboarding flow; leave empty when onboarding via provisioning key."
+  default     = []
 }

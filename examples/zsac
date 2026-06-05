@@ -9,11 +9,69 @@ YELLOW=$(tput setaf 3)
 CYAN=$(tput setaf 6)
 RESET=$(tput sgr0)
 
+################################################################################
+# Branding - Zscaler ASCII logo
+################################################################################
+_ZSCALER_ART=(
+"███████╗███████╗ ██████╗ █████╗ ██╗     ███████╗██████╗ "
+"╚══███╔╝██╔════╝██╔════╝██╔══██╗██║     ██╔════╝██╔══██╗"
+"  ███╔╝ ███████╗██║     ███████║██║     █████╗  ██████╔╝"
+" ███╔╝  ╚════██║██║     ██╔══██║██║     ██╔══╝  ██╔══██╗"
+"███████╗███████║╚██████╗██║  ██║███████╗███████╗██║  ██║"
+"╚══════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝"
+)
+_TAGLINE="App Connector for Azure"
+
+# Detect whether the terminal supports 24-bit truecolor for the gradient.
+_supports_truecolor() {
+    [ -t 1 ] || return 1
+    [ -n "$NO_COLOR" ] && return 1
+    case "${COLORTERM:-}" in truecolor|24bit) return 0 ;; esac
+    case "${TERM:-}" in *256color*|*kitty*|*iterm*) return 0 ;; esac
+    return 1
+}
+
+print_zscaler_logo() {
+    # No color when not a TTY or NO_COLOR is set: print plain logo.
+    if [ ! -t 1 ] || [ -n "$NO_COLOR" ]; then
+        printf '%s\n' "${_ZSCALER_ART[@]}"
+        printf '%s\n\n' "$_TAGLINE"
+        return
+    fi
+
+    local reset='\033[0m'
+    if _supports_truecolor; then
+        # Blue gradient from (37,99,235) to (147,197,253), matching the
+        # Zscaler MCP server branding.
+        local start_r=37 start_g=99 start_b=235
+        local end_r=147 end_g=197 end_b=253
+        local n=${#_ZSCALER_ART[@]}
+        local i
+        for i in "${!_ZSCALER_ART[@]}"; do
+            local denom=$(( n - 1 )); [ "$denom" -lt 1 ] && denom=1
+            local r=$(( start_r + (end_r - start_r) * i / denom ))
+            local g=$(( start_g + (end_g - start_g) * i / denom ))
+            local b=$(( start_b + (end_b - start_b) * i / denom ))
+            printf '\033[38;2;%d;%d;%dm%s%b\n' "$r" "$g" "$b" "${_ZSCALER_ART[$i]}" "$reset"
+        done
+        printf '\033[38;2;96;165;250m%s%b\n' "$_TAGLINE" "$reset"
+    else
+        local line
+        for line in "${_ZSCALER_ART[@]}"; do
+            printf '\033[34m%s%b\n' "$line" "$reset"
+        done
+        printf '\033[36m%s%b\n' "$_TAGLINE" "$reset"
+    fi
+    printf '\n'
+}
+
 usage()
 {
     echo "Usage: $0 <up|destroy>"
     exit 1
 }
+
+print_zscaler_logo
 
 if [ $# -ne 1 ] ; then
     usage
@@ -409,23 +467,53 @@ first_run="yes"
             echo "export ZPA_CLIENT_SECRET=\"${zpa_client_secret}\"" >> .zsacrc
             read -r -p "${CYAN}Enter ZPA Customer ID: ${RESET}" zpa_customer_id
             echo "export ZPA_CUSTOMER_ID=\"${zpa_customer_id}\"" >> .zsacrc
+        break
+        done
 
-            read -r -p "${CYAN}Do you already have an App Connector provisioning key to use? [yes/no]: ${RESET}" prov_key_response
-            case $prov_key_response in 
-                yes|y ) 
-                    read -r -p "${CYAN}Enter the name of your existing App Connector provisioning key: ${RESET}" byo_provisioning_key_name
-                    echo "export TF_VAR_byo_provisioning_key=true" >> .zsacrc
-                    echo "export TF_VAR_byo_provisioning_key_name=${byo_provisioning_key_name}" >> .zsacrc
+        # App Connector onboarding method. OAuth2 (default, recommended) enrolls
+        # connectors via OAuth2 user codes relayed through Azure Key Vault.
+        # provisioning_key uses the legacy provisioning key flow.
+        PS3="${CYAN}Select App Connector onboarding method: ${RESET}"
+        onboarding_methods=("oauth" "provisioning_key")
+        select onboarding_method in "${onboarding_methods[@]}"
+        do
+            case $REPLY in
+                1)
+                    onboarding_method=oauth
+                    echo "Onboarding method ${GREEN}OAuth2${RESET} selected (recommended)"
                 break
                 ;;
-                no|n )
-                    echo "${GREEN}Terraform will be creating a new App Connector Group and provisioning key${RESET}"
-                    echo "${YELLOW}Before proceeding, make sure you have entered all variable requirements from steps 1 and 2 in $dtype/terraform.tfvars${RESET}"
+                2)
+                    onboarding_method=provisioning_key
+                    echo "Onboarding method ${GREEN}provisioning key${RESET} selected"
                 break
                 ;;
-                * ) echo "${RED}Invalid response. Please enter yes or no${RESET}";;
+                *) echo "${RED}Invalid response. Please enter a number selection${RESET}";;
             esac
         done
+        echo "export TF_VAR_onboarding_method='${onboarding_method}'" >> .zsacrc
+
+        if [[ "$onboarding_method" == "provisioning_key" ]]; then
+            while true; do
+                read -r -p "${CYAN}Do you already have an App Connector provisioning key to use? [yes/no]: ${RESET}" prov_key_response
+                case $prov_key_response in
+                    yes|y )
+                        read -r -p "${CYAN}Enter the name of your existing App Connector provisioning key: ${RESET}" byo_provisioning_key_name
+                        echo "export TF_VAR_byo_provisioning_key=true" >> .zsacrc
+                        echo "export TF_VAR_byo_provisioning_key_name=${byo_provisioning_key_name}" >> .zsacrc
+                    break
+                    ;;
+                    no|n )
+                        echo "${GREEN}Terraform will be creating a new App Connector Group and provisioning key${RESET}"
+                        echo "${YELLOW}Before proceeding, make sure you have entered all variable requirements from steps 1 and 2 in $dtype/terraform.tfvars${RESET}"
+                    break
+                    ;;
+                    * ) echo "${RED}Invalid response. Please enter yes or no${RESET}";;
+                esac
+            done
+        else
+            echo "${GREEN}Terraform will onboard the App Connector(s) via OAuth2 user codes relayed through Azure Key Vault${RESET}"
+        fi
 
         acvm_instance_type_default=Standard_D4s_v5
         echo "${CYAN}Available VM types:${RESET}"

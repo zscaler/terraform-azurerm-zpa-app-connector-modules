@@ -1,20 +1,3 @@
-variable "enrollment_cert" {
-  type        = string
-  description = "Get name of ZPA enrollment cert to be used for App Connector provisioning"
-  default     = "Connector"
-
-  validation {
-    condition = (
-      var.enrollment_cert == "Root" ||
-      var.enrollment_cert == "Client" ||
-      var.enrollment_cert == "Connector" ||
-      var.enrollment_cert == "Service Edge" ||
-      var.enrollment_cert == "Isolation Client"
-    )
-    error_message = "Input enrollment_cert must be set to an approved value."
-  }
-}
-
 variable "provisioning_key_name" {
   type        = string
   description = "Name of the provisioning key"

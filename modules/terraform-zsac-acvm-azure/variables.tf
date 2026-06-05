@@ -1,13 +1,12 @@
 variable "name_prefix" {
   type        = string
   description = "A prefix to associate to all the AC VM module resources"
-  default     = null
 }
 
 variable "resource_tag" {
   type        = string
   description = "A tag to associate to all the AC VM module resources"
-  default     = null
+  default     = ""
 }
 
 variable "global_tags" {
@@ -65,8 +64,8 @@ variable "acvm_instance_type" {
 }
 
 variable "user_data" {
-  type        = string
-  description = "Cloud Init data"
+  type        = list(string)
+  description = "Per-instance cloud-init (custom_data) scripts, one entry per App Connector VM"
 }
 
 variable "acvm_image_publisher" {
@@ -89,8 +88,8 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version"
-  default     = "latest"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
+  default     = "2025.11.12"
 }
 
 variable "ac_count" {

@@ -94,8 +94,14 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version"
-  default     = "latest"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
+  default     = "2025.11.12"
+}
+
+variable "use_zscaler_image" {
+  type        = bool
+  description = "Whether to use the Zscaler App Connector Marketplace image (true) or a RHEL9 base image bootstrapped via the Zscaler yum repo (false)"
+  default     = true
 }
 
 variable "zones_enabled" {
@@ -135,21 +141,34 @@ variable "byo_provisioning_key_name" {
   default     = "provisioning-key-tf"
 }
 
-variable "enrollment_cert" {
+# ZPA App Connector onboarding method selection
+variable "onboarding_method" {
   type        = string
-  description = "Get name of ZPA enrollment cert to be used for App Connector provisioning"
-  default     = "Connector"
+  description = "App Connector onboarding method. \"oauth\" (default, recommended) enrolls connectors via OAuth2 user codes relayed through Azure Key Vault. \"provisioning_key\" uses the legacy provisioning key flow."
+  default     = "oauth"
 
   validation {
-    condition = (
-      var.enrollment_cert == "Root" ||
-      var.enrollment_cert == "Client" ||
-      var.enrollment_cert == "Connector" ||
-      var.enrollment_cert == "Service Edge" ||
-      var.enrollment_cert == "Isolation Client"
-    )
-    error_message = "Input enrollment_cert must be set to an approved value."
+    condition     = var.onboarding_method == "oauth" || var.onboarding_method == "provisioning_key"
+    error_message = "Input onboarding_method must be either \"oauth\" or \"provisioning_key\"."
   }
+}
+
+variable "app_connector_group_name" {
+  type        = string
+  description = "Optional name for the App Connector Group. Supports {region}, {name_prefix}, {random_suffix} substitution. If empty, a default name is generated."
+  default     = ""
+}
+
+variable "provisioning_key_name" {
+  type        = string
+  description = "Optional name for the Provisioning Key. If empty, the App Connector Group name is used."
+  default     = ""
+}
+
+variable "app_connector_group_city_country" {
+  type        = string
+  description = "Optional: City and country of this App Connector Group. example 'San Jose, US'"
+  default     = ""
 }
 
 variable "app_connector_group_description" {
@@ -491,4 +510,31 @@ variable "scheduled_scaling_end_time_min" {
   type        = number
   description = "Minute to end scheduled scaling profile."
   default     = 0
+}
+
+################################################################################
+# OAuth2 onboarding variables (Key Vault relay)
+################################################################################
+variable "byo_key_vault" {
+  type        = bool
+  description = "Bring your own Azure Key Vault for the OAuth2 token relay. If false, a new RBAC-enabled Key Vault is created for the OAuth2 flow."
+  default     = false
+}
+
+variable "byo_key_vault_name" {
+  type        = string
+  description = "Existing Key Vault name to relay OAuth2 user codes through. Required if byo_key_vault is true."
+  default     = ""
+}
+
+variable "byo_key_vault_rg" {
+  type        = string
+  description = "Resource group of the existing Key Vault. Required if byo_key_vault is true."
+  default     = ""
+}
+
+variable "oauth_token_wait_seconds" {
+  type        = number
+  description = "How long to wait (seconds) for App Connector scale-set instances to publish their OAuth2 user codes to Key Vault before Terraform reads them back."
+  default     = 420
 }

@@ -1,13 +1,12 @@
 variable "name_prefix" {
   type        = string
   description = "A prefix to associate to all the AC VM module resources"
-  default     = null
 }
 
 variable "resource_tag" {
   type        = string
   description = "A tag to associate to all the AC VM module resources"
-  default     = null
+  default     = ""
 }
 
 variable "fault_domain_count" {
@@ -77,6 +76,12 @@ variable "user_data" {
   description = "Cloud Init data"
 }
 
+variable "identity_ids" {
+  type        = list(string)
+  description = "List of User-assigned Managed Identity resource IDs to attach to the scale set. Used by the OAuth2 onboarding flow so instances can publish their user codes to Key Vault. Leave empty to attach no identity (e.g. provisioning key onboarding)."
+  default     = []
+}
+
 variable "acvm_image_publisher" {
   type        = string
   description = "Azure Marketplace Zscaler App Connector Image Publisher"
@@ -97,8 +102,8 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version"
-  default     = "latest"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
+  default     = "2025.11.12"
 }
 
 variable "acvm_source_image_id" {
