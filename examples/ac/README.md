@@ -52,6 +52,7 @@ From ac directory execute:
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.12 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | ~> 4.0.0 |
 | <a name="requirement_zpa"></a> [zpa](#requirement\_zpa) | ~> 4.4.0 |
 
@@ -62,7 +63,7 @@ From ac directory execute:
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
 | <a name="provider_local"></a> [local](#provider\_local) | ~> 2.5.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6.0 |
-| <a name="provider_time"></a> [time](#provider\_time) | n/a |
+| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.12 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | ~> 4.0.0 |
 
 ## Modules

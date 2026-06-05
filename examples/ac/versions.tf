@@ -20,6 +20,10 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.12"
+    }
     zpa = {
       source  = "zscaler/zpa"
       version = "~> 4.4.0"

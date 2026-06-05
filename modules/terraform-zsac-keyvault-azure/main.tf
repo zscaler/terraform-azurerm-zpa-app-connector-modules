@@ -10,6 +10,16 @@
 # secrets and read the codes back during apply.
 ################################################################################
 
+locals {
+  # Fold the module's name_prefix / resource_tag into the resource tags so the
+  # Key Vault carries the same identifying metadata as the rest of the
+  # deployment's resources.
+  kv_tags = merge(
+    var.global_tags,
+    { Name = trim("${var.name_prefix}-keyvault-${var.resource_tag}", "-") },
+  )
+}
+
 resource "azurerm_key_vault" "oauth" {
   name                       = var.key_vault_name
   location                   = var.location
@@ -20,7 +30,7 @@ resource "azurerm_key_vault" "oauth" {
   purge_protection_enabled   = var.purge_protection_enabled
   soft_delete_retention_days = var.soft_delete_retention_days
 
-  tags = var.global_tags
+  tags = local.kv_tags
 }
 
 ################################################################################
