@@ -193,12 +193,6 @@ variable "byo_key_vault_name" {
   default     = ""
 }
 
-variable "byo_key_vault_rg" {
-  type        = string
-  description = "Resource group of the existing Key Vault. Required if byo_key_vault is true."
-  default     = ""
-}
-
 variable "oauth_token_wait_seconds" {
   type        = number
   description = "How long to wait (seconds) for App Connector scale-set instances to publish their OAuth2 user codes to Key Vault before Terraform reads them back."

@@ -17,7 +17,6 @@
 ## Vault is created and torn down with the deployment.
 #byo_key_vault                                  = false
 #byo_key_vault_name                             = "existing-keyvault-name"
-#byo_key_vault_rg                               = "existing-keyvault-rg"
 ## How long (seconds) to wait for scale-set instances to publish their OAuth2 user codes before reading back.
 #oauth_token_wait_seconds                       = 420
 

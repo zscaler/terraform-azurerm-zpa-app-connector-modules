@@ -281,38 +281,62 @@ resource "time_sleep" "wait_for_oauth_tokens" {
   create_duration = "${var.oauth_token_wait_seconds}s"
 }
 
-data "azurerm_key_vault" "oauth" {
-  count               = local.use_provisioning_key ? 0 : 1
-  name                = local.key_vault_name
-  resource_group_name = var.byo_key_vault ? var.byo_key_vault_rg : module.network.resource_group_name
-  depends_on          = [time_sleep.wait_for_oauth_tokens]
-}
+# Discover and read back every OAuth2 user code that the scale-set instances
+# published to Key Vault. VMSS instance names are not known at plan time, so we
+# cannot enumerate per-secret data sources with for_each (the key set would be
+# unknown until apply, which Terraform rejects). Instead a single external data
+# source uses the Azure CLI to list secrets by this deployment's prefix and read
+# their values, returning them comma-joined. The value is unknown at plan
+# (allowed for a single data source) and resolves at apply, mirroring the AWS
+# ASG SSM discovery pattern.
+data "external" "oauth_tokens" {
+  count = local.use_provisioning_key ? 0 : 1
 
-# List all secret names in the vault, then keep only those that belong to this
-# deployment (prefix match). Dynamic VMSS instance names are not known at plan
-# time, so we discover the published codes rather than enumerate them up front.
-data "azurerm_key_vault_secrets" "oauth" {
-  count        = local.use_provisioning_key ? 0 : 1
-  key_vault_id = data.azurerm_key_vault.oauth[0].id
-  depends_on   = [time_sleep.wait_for_oauth_tokens]
-}
+  program = ["bash", "-c", <<-EOT
+    set -o pipefail
+    VAULT="${local.key_vault_name}"
+    PREFIX="${local.oauth_secret_prefix}"
 
-locals {
-  oauth_secret_names = local.use_provisioning_key ? [] : [
-    for name in data.azurerm_key_vault_secrets.oauth[0].names : name
-    if startswith(name, local.oauth_secret_prefix)
+    # Poll until at least one matching code is published, or we time out, to
+    # absorb the boot lag between an instance reaching ready and writing its
+    # /etc/issue code into Key Vault.
+    MAX_ATTEMPTS=24   # 24 * 30s = 12 minutes
+    ATTEMPT=0
+    TOKENS=""
+
+    while [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+      NAMES=$(az keyvault secret list \
+        --vault-name "$VAULT" \
+        --query "[?starts_with(name, '$PREFIX')].name" \
+        --output tsv 2>/dev/null || echo "")
+
+      TOKENS=""
+      for NAME in $NAMES; do
+        VALUE=$(az keyvault secret show \
+          --vault-name "$VAULT" \
+          --name "$NAME" \
+          --query value \
+          --output tsv 2>/dev/null || echo "")
+        if printf '%s' "$VALUE" | grep -Eq '^[A-Z0-9]{5}-[A-Z0-9]{5}$'; then
+          if [ -z "$TOKENS" ]; then TOKENS="$VALUE"; else TOKENS="$TOKENS,$VALUE"; fi
+        fi
+      done
+
+      if [ -n "$TOKENS" ]; then break; fi
+      sleep 30
+      ATTEMPT=$((ATTEMPT + 1))
+    done
+
+    printf '{"tokens":"%s"}' "$TOKENS"
+  EOT
   ]
-}
 
-data "azurerm_key_vault_secret" "oauth_tokens" {
-  for_each     = toset(local.oauth_secret_names)
-  name         = each.key
-  key_vault_id = data.azurerm_key_vault.oauth[0].id
-  depends_on   = [time_sleep.wait_for_oauth_tokens]
+  depends_on = [time_sleep.wait_for_oauth_tokens]
 }
 
 locals {
-  user_codes = local.use_provisioning_key ? [] : [for s in data.azurerm_key_vault_secret.oauth_tokens : s.value]
+  vmss_tokens_raw = local.use_provisioning_key ? "" : try(data.external.oauth_tokens[0].result.tokens, "")
+  user_codes      = local.use_provisioning_key ? [] : (local.vmss_tokens_raw != "" ? split(",", local.vmss_tokens_raw) : [])
 }
 
 
@@ -339,6 +363,6 @@ module "zpa_app_connector_group" {
   user_codes                                   = local.user_codes
 
   depends_on = [
-    data.azurerm_key_vault_secret.oauth_tokens,
+    data.external.oauth_tokens,
   ]
 }
