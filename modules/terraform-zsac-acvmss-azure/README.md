@@ -16,7 +16,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
@@ -25,7 +25,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
 
 ## Modules
@@ -35,31 +35,32 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_monitor_autoscale_setting.vmss_autoscale_setting](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_autoscale_setting) | resource |
 | [azurerm_orchestrated_virtual_machine_scale_set.ac_vmss](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/orchestrated_virtual_machine_scale_set) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_ac_nsg_id"></a> [ac\_nsg\_id](#input\_ac\_nsg\_id) | App Connector management interface nsg id | `string` | n/a | yes |
 | <a name="input_ac_subnet_id"></a> [ac\_subnet\_id](#input\_ac\_subnet\_id) | App Connector subnet id | `list(string)` | n/a | yes |
 | <a name="input_ac_username"></a> [ac\_username](#input\_ac\_username) | Default App Connector admin/root username | `string` | `"zsroot"` | no |
 | <a name="input_acvm_image_offer"></a> [acvm\_image\_offer](#input\_acvm\_image\_offer) | Azure Marketplace Zscaler App Connector Image Offer | `string` | `"zscaler-private-access"` | no |
 | <a name="input_acvm_image_publisher"></a> [acvm\_image\_publisher](#input\_acvm\_image\_publisher) | Azure Marketplace Zscaler App Connector Image Publisher | `string` | `"zscaler"` | no |
 | <a name="input_acvm_image_sku"></a> [acvm\_image\_sku](#input\_acvm\_image\_sku) | Azure Marketplace Zscaler App Connector Image SKU | `string` | `"zpa-con-azure"` | no |
-| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version | `string` | `"latest"` | no |
+| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). | `string` | `"2025.11.12"` | no |
 | <a name="input_acvm_instance_type"></a> [acvm\_instance\_type](#input\_acvm\_instance\_type) | App Connector Image size. Default is Standard\_D4s\_v5 (4 vCPU Intel). AMD alternatives (Standard\_D4as\_v5) are typically 10-15% cheaper. For AppProtection workloads, use 8-core instances (Standard\_D8s\_v5 or Standard\_D8as\_v5). | `string` | `"Standard_D4s_v5"` | no |
 | <a name="input_acvm_source_image_id"></a> [acvm\_source\_image\_id](#input\_acvm\_source\_image\_id) | Custom App Connector Source Image ID. Set this value to the path of a local subscription Microsoft.Compute image to override the App Connector deployment instead of using the marketplace publisher | `string` | `null` | no |
 | <a name="input_backend_address_pool"></a> [backend\_address\_pool](#input\_backend\_address\_pool) | Azure LB Backend Address Pool ID for NIC association | `string` | `null` | no |
-| <a name="input_encryption_at_host_enabled"></a> [encryption\_at\_host\_enabled](#input\_encryption\_at\_host\_enabled) | User input for enabling or disabling host encryption | `bool` | `true` | no |
+| <a name="input_encryption_at_host_enabled"></a> [encryption\_at\_host\_enabled](#input\_encryption\_at\_host\_enabled) | Enable Azure encryption-at-host for the scale set. NOTE: EncryptionAtHost is a subscription-level feature that must be registered first (az feature register --namespace Microsoft.Compute --name EncryptionAtHost), otherwise VMSS creation fails with 'securityProfile.encryptionAtHost is not valid because the Microsoft.Compute/EncryptionAtHost feature is not enabled for this subscription'. Disabled by default; set to true only on subscriptions where the feature is registered. | `bool` | `false` | no |
 | <a name="input_fault_domain_count"></a> [fault\_domain\_count](#input\_fault\_domain\_count) | platformFaultDomainCount must be set to 1 for max spreading or 5 for static fixed spreading. Fixed spreading with 2 or 3 fault domains isn't supported for zonal deployments | `number` | `1` | no |
 | <a name="input_global_tags"></a> [global\_tags](#input\_global\_tags) | Populate any custom user defined tags from a map | `map(string)` | `{}` | no |
+| <a name="input_identity_ids"></a> [identity\_ids](#input\_identity\_ids) | List of User-assigned Managed Identity resource IDs to attach to the scale set. Used by the OAuth2 onboarding flow so instances can publish their user codes to Key Vault. Leave empty to attach no identity (e.g. provisioning key onboarding). | `list(string)` | `[]` | no |
 | <a name="input_location"></a> [location](#input\_location) | App Connector Azure Region | `string` | n/a | yes |
-| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | A prefix to associate to all the AC VM module resources | `string` | `null` | no |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | A prefix to associate to all the AC VM module resources | `string` | n/a | yes |
 | <a name="input_resource_group"></a> [resource\_group](#input\_resource\_group) | Main Resource Group Name | `string` | n/a | yes |
-| <a name="input_resource_tag"></a> [resource\_tag](#input\_resource\_tag) | A tag to associate to all the AC VM module resources | `string` | `null` | no |
+| <a name="input_resource_tag"></a> [resource\_tag](#input\_resource\_tag) | A tag to associate to all the AC VM module resources | `string` | `""` | no |
 | <a name="input_scale_in_cooldown"></a> [scale\_in\_cooldown](#input\_scale\_in\_cooldown) | Amount of time after scale in before scale in is evaluated again. | `string` | `"PT15M"` | no |
 | <a name="input_scale_in_count"></a> [scale\_in\_count](#input\_scale\_in\_count) | Number of ACs to bring up on scale in event. | `string` | `"1"` | no |
 | <a name="input_scale_in_evaluation_period"></a> [scale\_in\_evaluation\_period](#input\_scale\_in\_evaluation\_period) | Amount of time the average of scaling metric is evaluated over. | `string` | `"PT5M"` | no |
@@ -87,7 +88,8 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
+| <a name="output_vmss_identity_ids"></a> [vmss\_identity\_ids](#output\_vmss\_identity\_ids) | User-assigned Managed Identity resource IDs attached to each App Connector scale set (echoes the identity\_ids input). |
 | <a name="output_vmss_ids"></a> [vmss\_ids](#output\_vmss\_ids) | VMSS IDs |
 | <a name="output_vmss_names"></a> [vmss\_names](#output\_vmss\_names) | VMSS Names |
 <!-- END_TF_DOCS -->

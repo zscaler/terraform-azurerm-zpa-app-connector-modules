@@ -19,7 +19,11 @@ examples/**/*.tfstate.*
 *.pub
 examples/.*rc*
 **/bin/*
-user_data
+# Generated per-run user_data artifacts written by the examples.
+examples/**/user_data
+# But always track the source bootstrap templates.
+!scripts/user_data_zscaler.sh
+!scripts/user_data_rhel9.sh
 system-*.tar
 **/testbed*
 

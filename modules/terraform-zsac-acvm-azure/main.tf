@@ -1,7 +1,15 @@
 ################################################################################
-# Make sure that ZPA App Connector image terms have been accepted
+# Make sure that ZPA App Connector image terms have been accepted.
+#
+# A marketplace agreement is a subscription-level singleton: once the terms for
+# a plan are accepted they persist for the whole subscription. Most subscriptions
+# already have these terms accepted, in which case Terraform creating the resource
+# fails with "a resource with the ID ... already exists". This is therefore opt-in
+# (disabled by default); set accept_marketplace_agreement = true only for a brand
+# new subscription where the terms have never been accepted.
 ################################################################################
 resource "azurerm_marketplace_agreement" "zs_image_agreement" {
+  count     = var.accept_marketplace_agreement ? 1 : 0
   offer     = var.acvm_image_offer
   plan      = var.acvm_image_sku
   publisher = var.acvm_image_publisher
@@ -59,7 +67,18 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
 
   computer_name  = "${var.name_prefix}-acvm-${count.index + 1}-${var.resource_tag}"
   admin_username = var.ac_username
-  custom_data    = base64encode(var.user_data)
+  custom_data    = base64encode(element(var.user_data, count.index))
+
+  # User-assigned Managed Identity passed in by the caller. Used by the OAuth2
+  # onboarding flow so the connector VM can publish its OAuth2 user code to Azure
+  # Key Vault without any embedded credentials. The identity is created up front
+  # (outside this module) and its Key Vault grant is propagated BEFORE the VM
+  # boots, so the connector's first Key Vault write succeeds instead of hitting a
+  # boot-time 403 ForbiddenByRbac. Harmless when onboarding via provisioning key.
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [var.user_assigned_identity_id]
+  }
 
   admin_ssh_key {
     username   = var.ac_username
@@ -91,6 +110,10 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
     azurerm_marketplace_agreement.zs_image_agreement,
   ]
 }
+# NOTE: depends_on above tolerates the agreement being absent (count = 0) when
+# accept_marketplace_agreement is false; Terraform simply has no instance to
+# wait on, which is the desired behavior for subscriptions where terms are
+# already accepted.
 
 
 ################################################################################

@@ -21,6 +21,12 @@ variable "app_connector_group_country_code" {
   default     = ""
 }
 
+variable "app_connector_group_city_country" {
+  type        = string
+  description = "Optional: City and country of this App Connector Group. example 'San Jose, US'"
+  default     = ""
+}
+
 variable "app_connector_group_latitude" {
   type        = string
   description = "Latitude of the App Connector Group. Integer or decimal. With values in the range of -90 to 90"
@@ -51,13 +57,13 @@ variable "app_connector_group_upgrade_time_in_secs" {
 variable "app_connector_group_override_version_profile" {
   type        = bool
   description = "Optional: Whether the default version profile of the App Connector Group is applied or overridden. Default: false"
-  default     = true
+  default     = false
 }
 
 variable "app_connector_group_version_profile_id" {
   type        = string
   description = "Optional: ID of the version profile. To learn more, see Version Profile Use Cases. https://help.zscaler.com/zpa/configuring-version-profile"
-  default     = "2"
+  default     = "0"
 
   validation {
     condition = (
@@ -82,4 +88,10 @@ variable "app_connector_group_dns_query_type" {
     )
     error_message = "Input app_connector_group_dns_query_type must be set to an approved value."
   }
+}
+
+variable "user_codes" {
+  type        = list(string)
+  description = "Optional: List of OAuth2 user codes used to enroll App Connectors into this group. Populated automatically by the OAuth2 onboarding flow; leave empty when onboarding via provisioning key."
+  default     = []
 }

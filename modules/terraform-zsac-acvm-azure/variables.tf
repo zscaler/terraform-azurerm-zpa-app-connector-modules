@@ -1,13 +1,12 @@
 variable "name_prefix" {
   type        = string
   description = "A prefix to associate to all the AC VM module resources"
-  default     = null
 }
 
 variable "resource_tag" {
   type        = string
   description = "A tag to associate to all the AC VM module resources"
-  default     = null
+  default     = ""
 }
 
 variable "global_tags" {
@@ -65,8 +64,19 @@ variable "acvm_instance_type" {
 }
 
 variable "user_data" {
+  type        = list(string)
+  description = "Per-instance cloud-init (custom_data) scripts, one entry per App Connector VM"
+}
+
+variable "user_assigned_identity_id" {
   type        = string
-  description = "Cloud Init data"
+  description = "Resource ID of the user-assigned Managed Identity to attach to each App Connector VM. Used by the OAuth2 onboarding flow to authenticate to Key Vault. Created up front by the caller so its Key Vault grant is in place before the VM boots."
+}
+
+variable "accept_marketplace_agreement" {
+  type        = bool
+  description = "Whether to accept the Zscaler App Connector Azure Marketplace image terms. A marketplace agreement is a subscription-level singleton; if the terms are already accepted in the subscription, leave this false to avoid an 'already exists' error. Set to true only for a new subscription where the terms have never been accepted."
+  default     = false
 }
 
 variable "acvm_image_publisher" {
@@ -89,8 +99,8 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version"
-  default     = "latest"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
+  default     = "2025.11.12"
 }
 
 variable "ac_count" {

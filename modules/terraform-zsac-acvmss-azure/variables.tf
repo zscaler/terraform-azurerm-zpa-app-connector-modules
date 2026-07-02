@@ -1,13 +1,12 @@
 variable "name_prefix" {
   type        = string
   description = "A prefix to associate to all the AC VM module resources"
-  default     = null
 }
 
 variable "resource_tag" {
   type        = string
   description = "A tag to associate to all the AC VM module resources"
-  default     = null
+  default     = ""
 }
 
 variable "fault_domain_count" {
@@ -77,6 +76,12 @@ variable "user_data" {
   description = "Cloud Init data"
 }
 
+variable "identity_ids" {
+  type        = list(string)
+  description = "List of User-assigned Managed Identity resource IDs to attach to the scale set. Used by the OAuth2 onboarding flow so instances can publish their user codes to Key Vault. Leave empty to attach no identity (e.g. provisioning key onboarding)."
+  default     = []
+}
+
 variable "acvm_image_publisher" {
   type        = string
   description = "Azure Marketplace Zscaler App Connector Image Publisher"
@@ -97,8 +102,8 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version"
-  default     = "latest"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
+  default     = "2025.11.12"
 }
 
 variable "acvm_source_image_id" {
@@ -146,8 +151,8 @@ variable "ac_nsg_id" {
 
 variable "encryption_at_host_enabled" {
   type        = bool
-  description = "User input for enabling or disabling host encryption"
-  default     = true
+  description = "Enable Azure encryption-at-host for the scale set. NOTE: EncryptionAtHost is a subscription-level feature that must be registered first (az feature register --namespace Microsoft.Compute --name EncryptionAtHost), otherwise VMSS creation fails with 'securityProfile.encryptionAtHost is not valid because the Microsoft.Compute/EncryptionAtHost feature is not enabled for this subscription'. Disabled by default; set to true only on subscriptions where the feature is registered."
+  default     = false
 }
 
 variable "vmss_default_acs" {

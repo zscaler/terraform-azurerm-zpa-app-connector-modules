@@ -6,6 +6,22 @@
 #####################################################################################################################
 
 #####################################################################################################################
+##### App Connector onboarding method                                                                          #####
+#####################################################################################################################
+## By default this module onboards App Connectors using OAuth2 user codes (recommended). Each scale-set instance
+## publishes its /etc/issue user code to an Azure Key Vault via a user-assigned Managed Identity; Terraform reads
+## the codes back to create the App Connector Group. Set onboarding_method to "provisioning_key" to use the legacy
+## provisioning key flow instead. (Default: "oauth")
+#onboarding_method                              = "oauth"
+
+## OAuth2 flow: bring your own Key Vault for the user-code relay (optional). If false, a new RBAC-enabled Key
+## Vault is created and torn down with the deployment.
+#byo_key_vault                                  = false
+#byo_key_vault_name                             = "existing-keyvault-name"
+## How long (seconds) to wait for scale-set instances to publish their OAuth2 user codes before reading back.
+#oauth_token_wait_seconds                       = 420
+
+#####################################################################################################################
 ##### Optional: ZPA Provider Resources. Skip to step 3. if you already have an  #####
 ##### App Connector Group + Provisioning Key.                                   #####
 #####################################################################################################################
@@ -30,17 +46,18 @@
 ##    https://registry.terraform.io/providers/zscaler/zpa/latest/docs/resources/zpa_app_connector_group
 
 #app_connector_group_name                       = "new_group_name"
-#app_connector_group_description                = "group_description"
-#app_connector_group_enabled                    = true
-#app_connector_group_country_code               = "US"
-#app_connector_group_latitude                   = "37.3382082"
-#app_connector_group_longitude                  = "-121.8863286"
-#app_connector_group_location                   = "San Jose, CA, USA"
-#app_connector_group_upgrade_day                = "SUNDAY"
-#app_connector_group_upgrade_time_in_secs       = "66600"
-#app_connector_group_override_version_profile   = true
-#app_connector_group_version_profile_id         = "2"
-#app_connector_group_dns_query_type             = "IPV4_IPV6"
+app_connector_group_description              = "group_description"
+app_connector_group_enabled                  = true
+app_connector_group_country_code             = "US"
+app_connector_group_latitude                 = "37.3382082"
+app_connector_group_longitude                = "-121.8863286"
+app_connector_group_location                 = "San Jose, CA, USA"
+app_connector_group_upgrade_day              = "SUNDAY"
+app_connector_group_upgrade_time_in_secs     = "66600"
+app_connector_group_override_version_profile = false
+# app_connector_group_version_profile_id       = "2"
+app_connector_group_dns_query_type = "IPV4_IPV6"
+
 
 
 #####################################################################################################################
@@ -71,7 +88,7 @@
 ##
 ##    4-core Intel instances (Zscaler recommended):
 #acvm_instance_type                         = "Standard_D4s_v5"   # Default - latest gen Intel
-#acvm_instance_type                         = "Standard_D4s_v4"
+acvm_instance_type = "Standard_D4s_v4"
 #acvm_instance_type                         = "Standard_D4s_v3"   # Zscaler recommended
 #acvm_instance_type                         = "Standard_F4s_v2"   # Zscaler recommended (retiring Nov 2028)
 ##
