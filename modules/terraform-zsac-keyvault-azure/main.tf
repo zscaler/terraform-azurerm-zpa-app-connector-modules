@@ -42,6 +42,16 @@ resource "azurerm_role_assignment" "deployer_secrets_officer" {
   principal_id         = var.deployer_object_id
 }
 
+# Azure RBAC role assignments are eventually consistent: the data-plane (Key
+# Vault) can return 403 ForbiddenByRbac for up to a minute or two after the
+# assignment is created. Without this wait the very first placeholder-secret
+# write in the same apply races the propagation and fails. Consumers depend on
+# the `deployer_rbac_ready` output before touching secrets.
+resource "time_sleep" "wait_for_deployer_rbac" {
+  depends_on      = [azurerm_role_assignment.deployer_secrets_officer]
+  create_duration = var.rbac_propagation_wait
+}
+
 ################################################################################
 # Grant each App Connector VM/VMSS Managed Identity permission to write its
 # OAuth2 user code secret.
@@ -51,4 +61,16 @@ resource "azurerm_role_assignment" "vm_secrets_officer" {
   scope                = azurerm_key_vault.oauth.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = var.vm_identity_principal_ids[count.index]
+}
+
+# Absorb RBAC eventual-consistency for the VM identity grants the same way the
+# deployer grant does. The App Connector VMs must NOT boot until this has
+# propagated, otherwise the connector's first `az keyvault secret set` at boot
+# races the role assignment and fails with 403 ForbiddenByRbac (the VM script
+# retries, but pushing the grant ahead of boot makes onboarding deterministic).
+# Consumers depend on the `vm_rbac_ready` output before creating the VMs.
+resource "time_sleep" "wait_for_vm_rbac" {
+  count           = length(var.vm_identity_principal_ids) > 0 ? 1 : 0
+  depends_on      = [azurerm_role_assignment.vm_secrets_officer]
+  create_duration = var.rbac_propagation_wait
 }

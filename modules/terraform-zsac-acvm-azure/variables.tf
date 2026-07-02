@@ -68,6 +68,11 @@ variable "user_data" {
   description = "Per-instance cloud-init (custom_data) scripts, one entry per App Connector VM"
 }
 
+variable "user_assigned_identity_id" {
+  type        = string
+  description = "Resource ID of the user-assigned Managed Identity to attach to each App Connector VM. Used by the OAuth2 onboarding flow to authenticate to Key Vault. Created up front by the caller so its Key Vault grant is in place before the VM boots."
+}
+
 variable "accept_marketplace_agreement" {
   type        = bool
   description = "Whether to accept the Zscaler App Connector Azure Marketplace image terms. A marketplace agreement is a subscription-level singleton; if the terms are already accepted in the subscription, leave this false to avoid an 'already exists' error. Set to true only for a new subscription where the terms have never been accepted."

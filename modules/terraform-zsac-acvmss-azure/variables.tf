@@ -151,8 +151,8 @@ variable "ac_nsg_id" {
 
 variable "encryption_at_host_enabled" {
   type        = bool
-  description = "User input for enabling or disabling host encryption"
-  default     = true
+  description = "Enable Azure encryption-at-host for the scale set. NOTE: EncryptionAtHost is a subscription-level feature that must be registered first (az feature register --namespace Microsoft.Compute --name EncryptionAtHost), otherwise VMSS creation fails with 'securityProfile.encryptionAtHost is not valid because the Microsoft.Compute/EncryptionAtHost feature is not enabled for this subscription'. Disabled by default; set to true only on subscriptions where the feature is registered."
+  default     = false
 }
 
 variable "vmss_default_acs" {

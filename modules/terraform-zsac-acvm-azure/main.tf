@@ -69,11 +69,15 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
   admin_username = var.ac_username
   custom_data    = base64encode(element(var.user_data, count.index))
 
-  # System-assigned Managed Identity. Used by the OAuth2 onboarding flow so the
-  # connector VM can publish its OAuth2 user code to Azure Key Vault without any
-  # embedded credentials. Harmless when onboarding via provisioning key.
+  # User-assigned Managed Identity passed in by the caller. Used by the OAuth2
+  # onboarding flow so the connector VM can publish its OAuth2 user code to Azure
+  # Key Vault without any embedded credentials. The identity is created up front
+  # (outside this module) and its Key Vault grant is propagated BEFORE the VM
+  # boots, so the connector's first Key Vault write succeeds instead of hitting a
+  # boot-time 403 ForbiddenByRbac. Harmless when onboarding via provisioning key.
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [var.user_assigned_identity_id]
   }
 
   admin_ssh_key {

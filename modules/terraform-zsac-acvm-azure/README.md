@@ -62,6 +62,7 @@ No modules.
 | <a name="input_resource_group"></a> [resource\_group](#input\_resource\_group) | Main Resource Group Name | `string` | n/a | yes |
 | <a name="input_resource_tag"></a> [resource\_tag](#input\_resource\_tag) | A tag to associate to all the AC VM module resources | `string` | `""` | no |
 | <a name="input_ssh_key"></a> [ssh\_key](#input\_ssh\_key) | SSH Key for instances | `string` | n/a | yes |
+| <a name="input_user_assigned_identity_id"></a> [user\_assigned\_identity\_id](#input\_user\_assigned\_identity\_id) | Resource ID of the user-assigned Managed Identity to attach to each App Connector VM. Used by the OAuth2 onboarding flow to authenticate to Key Vault. Created up front by the caller so its Key Vault grant is in place before the VM boots. | `string` | n/a | yes |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | Per-instance cloud-init (custom\_data) scripts, one entry per App Connector VM | `list(string)` | n/a | yes |
 | <a name="input_zones"></a> [zones](#input\_zones) | Specify which availability zone(s) to deploy VM resources in if zones\_enabled variable is set to true | `list(string)` | <pre>[<br/>  "1"<br/>]</pre> | no |
 | <a name="input_zones_enabled"></a> [zones\_enabled](#input\_zones\_enabled) | Determine whether to provision App Connector VMs explicitly in defined zones (if supported by the Azure region provided in the location variable). If left false, Azure will automatically choose a zone and module will create an availability set resource instead for VM fault tolerance | `bool` | `false` | no |
@@ -71,6 +72,5 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_ac_hostname"></a> [ac\_hostname](#output\_ac\_hostname) | Instance Host Name |
-| <a name="output_ac_vm_identity_principal_ids"></a> [ac\_vm\_identity\_principal\_ids](#output\_ac\_vm\_identity\_principal\_ids) | System-assigned Managed Identity principal IDs for each App Connector VM. Used to grant Key Vault access for the OAuth2 onboarding flow. |
 | <a name="output_private_ip"></a> [private\_ip](#output\_private\_ip) | Instance Management Interface Private IP Address |
 <!-- END_TF_DOCS -->

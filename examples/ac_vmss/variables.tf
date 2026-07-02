@@ -124,8 +124,8 @@ variable "zones" {
 
 variable "encryption_at_host_enabled" {
   type        = bool
-  description = "User input for enabling or disabling host encryption"
-  default     = true
+  description = "Enable Azure encryption-at-host for the scale set. NOTE: EncryptionAtHost is a subscription-level feature that must be registered first (az feature register --namespace Microsoft.Compute --name EncryptionAtHost), otherwise VMSS creation fails with 'securityProfile.encryptionAtHost is not valid because the Microsoft.Compute/EncryptionAtHost feature is not enabled for this subscription'. Disabled by default; set to true only on subscriptions where the feature is registered."
+  default     = false
 }
 
 # ZPA Provider specific variables for App Connector Group and Provisioning Key creation
@@ -228,7 +228,7 @@ variable "app_connector_group_override_version_profile" {
 variable "app_connector_group_version_profile_id" {
   type        = string
   description = "Optional: ID of the version profile. To learn more, see Version Profile Use Cases. https://help.zscaler.com/zpa/configuring-version-profile"
-  default     = "2"
+  default     = "0"
 
   validation {
     condition = (

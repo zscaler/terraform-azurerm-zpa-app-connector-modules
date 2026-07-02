@@ -57,3 +57,9 @@ variable "purge_protection_enabled" {
   description = "Whether purge protection is enabled. Disabled by default so ephemeral test/CI vaults can be fully destroyed."
   default     = false
 }
+
+variable "rbac_propagation_wait" {
+  type        = string
+  description = "How long to wait after creating the deployer's Key Vault Secrets Officer role assignment before secrets are created/read, to absorb Azure RBAC eventual-consistency (ForbiddenByRbac) lag."
+  default     = "120s"
+}

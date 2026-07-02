@@ -240,6 +240,10 @@ module "ac_vmss" {
 
   depends_on = [
     module.zpa_provisioning_key,
+    # Boot the scale set only after the connector identity's Key Vault grant has
+    # been created and given time to propagate, so an instance's first OAuth2
+    # secret write at boot does not race the RBAC assignment and fail with 403.
+    module.oauth_key_vault,
   ]
 }
 

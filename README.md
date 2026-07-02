@@ -85,10 +85,56 @@ provider "zpa" {
   zscaler_cloud = "zscaler_cloud" # pragma: allowlist secret
 }
 ```
+
+-> **Attention Government customers.** OneAPI and Zidentity now support the government (FedRAMP) clouds. These are FedRAMP-isolated environments served by a dedicated Zidentity identity provider and API gateway. To authenticate, set the `zscaler_cloud` attribute (or `ZSCALER_CLOUD` environment variable) to one of the supported government values `gov` or `govus`:
+
+| Argument        | Description                                                     | Environment Variable    |
+|-----------------|-----------------------------------------------------------------|-------------------------|
+| `vanity_domain` | _(String)_ Refers to the domain name used by your organization  | `ZSCALER_VANITY_DOMAIN` |
+| `zscaler_cloud` | _(String)_ Supported Zidentity Gov Cloud `gov` or `govus`       | `ZSCALER_CLOUD`         |
+
+**NOTE:** The FedRAMP cloud is only supported when using a compatible provider version. Ensure you are on a ZPA provider version that supports the unified `gov` / `govus` cloud values.
+
+For example, authenticating to the GOV environment:
+
+```sh
+export ZSCALER_VANITY_DOMAIN="acme"
+export ZSCALER_CLOUD="gov"
+```
+
 3. (Optional) An existing App Connector Group and Provisioning Key. Otherwise, you can follow the prompts in the examples terraform.tfvars to create a new Connector Group and Provisioning Key
 
 See: [Zscaler App Connector Azure Deployment Guide](https://help.zscaler.com/zpa/connector-deployment-guide-microsoft-azure) for additional prerequisite provisioning steps.
 
+
+## App Connector Onboarding Methods
+
+This module supports **both** App Connector onboarding methods, selectable per deployment via the `onboarding_method` variable in your `terraform.tfvars`:
+
+| `onboarding_method` | Description |
+|---------------------|-------------|
+| `oauth` _(default)_ | Enrolls App Connectors using **OAuth2 user codes**. Each connector reads its user code from `/etc/issue` at boot, publishes it to an Azure Key Vault secret via the VM's user-assigned Managed Identity, and Terraform reads it back to create the App Connector Group. This is the modern, more secure enrollment flow. |
+| `provisioning_key`  | Enrolls App Connectors using the traditional **provisioning key**. The key is generated via the `zpa_provisioning_key` resource (or supplied via `byo_provisioning_key` / `byo_provisioning_key_name`) and baked into the VM `user_data`; the connector self-enrolls at boot. No Key Vault interaction is required. |
+
+Both methods are supported and can be used interchangeably. The default is `oauth`.
+
+-> **Recommended:** If your Zscaler tenant has been migrated to support the OAuth2 onboarding method, that should be your **preferred** method as Zscaler is encouraging customers to move away from the provisioning key approach. If your tenant has not yet been migrated, use `onboarding_method = "provisioning_key"`.
+
+Example `terraform.tfvars` snippets:
+
+```hcl
+# Default: OAuth2 user code onboarding (recommended for migrated tenants)
+onboarding_method = "oauth"
+```
+
+```hcl
+# Legacy provisioning key onboarding
+onboarding_method = "provisioning_key"
+
+# Optionally bring your own existing provisioning key instead of creating one
+# byo_provisioning_key      = true
+# byo_provisioning_key_name = "my-existing-key"
+```
 
 ## How to deploy
 Provisioning templates are available for customer use/reference to successfully deploy fully operational App Connector appliances once the prerequisites have been completed. Please follow the instructions located in [examples](examples/README.md).

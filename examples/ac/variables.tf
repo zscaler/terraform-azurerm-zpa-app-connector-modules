@@ -244,7 +244,7 @@ variable "app_connector_group_override_version_profile" {
 variable "app_connector_group_version_profile_id" {
   type        = string
   description = "Optional: ID of the version profile. To learn more, see Version Profile Use Cases. https://help.zscaler.com/zpa/configuring-version-profile"
-  default     = "2"
+  default     = "0"
 
   validation {
     condition = (
@@ -425,6 +425,7 @@ variable "byo_key_vault_name" {
   default     = ""
 }
 
+# tflint-ignore: terraform_unused_declarations # Public BYO input; consumed by the caller/tfvars, not referenced directly in this example.
 variable "byo_key_vault_rg" {
   type        = string
   description = "Resource group of the existing Key Vault. Required if byo_key_vault is true."
@@ -433,6 +434,12 @@ variable "byo_key_vault_rg" {
 
 variable "oauth_token_wait_seconds" {
   type        = number
-  description = "How long to wait (seconds) for App Connector VMs to publish their OAuth2 user codes to Key Vault before Terraform reads them back."
-  default     = 360
+  description = "Maximum time (seconds) to poll Key Vault for the App Connector VMs' OAuth2 user codes before failing the apply. The poller starts immediately and returns as soon as all codes are published, so this is an upper bound, not a fixed wait. Allow generous headroom: the appliance installs the Azure CLI at boot (3-5 min of dependency builds) BEFORE it can publish, on top of VM boot and connector token generation."
+  default     = 900
+}
+
+variable "oauth_token_poll_interval_seconds" {
+  type        = number
+  description = "How often (seconds) to poll Key Vault for the OAuth2 user codes. Lower values give faster feedback at the cost of more Azure CLI calls."
+  default     = 10
 }
