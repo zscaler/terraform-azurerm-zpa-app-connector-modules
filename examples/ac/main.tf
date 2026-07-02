@@ -306,6 +306,17 @@ data "external" "oauth_tokens" {
     EXPECTED=${var.ac_count}
     INTERVAL=${var.oauth_token_poll_interval_seconds}
     DEADLINE=$(( $(date +%s) + ${var.oauth_token_wait_seconds} ))
+    CACHE="${path.module}/.oauth_tokens_${random_string.suffix.result}.json"
+
+    # Idempotence guard: OAuth2 discovery is a one-shot bootstrap step. Once the
+    # codes have been read back and cached on the first apply, return them
+    # verbatim on every later plan/apply instead of re-polling Key Vault. A data
+    # source re-executes on every plan, so without this the idempotence re-plan
+    # would re-run the poll every time.
+    if [ -s "$CACHE" ]; then
+      cat "$CACHE"
+      exit 0
+    fi
 
     ATTEMPT=0
     TOKENS=""
@@ -343,7 +354,11 @@ data "external" "oauth_tokens" {
       sleep "$INTERVAL"
     done
 
-    printf '{"tokens":"%s"}' "$TOKENS"
+    # Reaching here means every expected code was found (a timeout exits 1 above),
+    # so cache the successful discovery for idempotent re-reads.
+    RESULT=$(printf '{"tokens":"%s"}' "$TOKENS")
+    printf '%s' "$RESULT" > "$CACHE"
+    printf '%s' "$RESULT"
   EOT
   ]
 

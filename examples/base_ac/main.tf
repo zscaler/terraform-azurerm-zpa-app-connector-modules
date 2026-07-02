@@ -295,10 +295,22 @@ data "external" "oauth_tokens" {
     VAULT="${local.key_vault_name}"
     NAMES="${join(" ", local.oauth_secret_names)}"
     EXPECTED=${var.ac_count}
+    CACHE="${path.module}/.oauth_tokens_${random_string.suffix.result}.json"
+
+    # Idempotence guard: OAuth2 discovery is a one-shot bootstrap step. Once the
+    # codes have been read back and cached on the first apply, return them
+    # verbatim on every later plan/apply instead of re-polling Key Vault. A data
+    # source re-executes on every plan, so without this the idempotence re-plan
+    # would re-run the poll every time.
+    if [ -s "$CACHE" ]; then
+      cat "$CACHE"
+      exit 0
+    fi
 
     MAX_ATTEMPTS=24   # 24 * 30s = 12 minutes
     ATTEMPT=0
     TOKENS=""
+    FOUND=0
 
     while [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
       TOKENS=""
@@ -320,7 +332,10 @@ data "external" "oauth_tokens" {
       ATTEMPT=$((ATTEMPT + 1))
     done
 
-    printf '{"tokens":"%s"}' "$TOKENS"
+    RESULT=$(printf '{"tokens":"%s"}' "$TOKENS")
+    # Only cache once every expected code is present so a partial read is not frozen in.
+    if [ "$FOUND" -ge "$EXPECTED" ]; then printf '%s' "$RESULT" > "$CACHE"; fi
+    printf '%s' "$RESULT"
   EOT
   ]
 

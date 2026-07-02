@@ -291,6 +291,17 @@ data "external" "oauth_tokens" {
     set -o pipefail
     VAULT="${local.key_vault_name}"
     PREFIX="${local.oauth_secret_prefix}"
+    CACHE="${path.module}/.oauth_tokens_${random_string.suffix.result}.json"
+
+    # Idempotence guard: OAuth2 discovery is a one-shot bootstrap step. Once the
+    # codes have been read back and cached on the first apply, return them
+    # verbatim on every later plan/apply instead of re-polling Key Vault. A data
+    # source re-executes on every plan, so without this the idempotence re-plan
+    # would re-run the (slow) poll and can blow past the CI step timeout.
+    if [ -s "$CACHE" ]; then
+      cat "$CACHE"
+      exit 0
+    fi
 
     # Poll until at least one matching code is published, or we time out, to
     # absorb the boot lag between an instance reaching ready and writing its
@@ -322,7 +333,10 @@ data "external" "oauth_tokens" {
       ATTEMPT=$((ATTEMPT + 1))
     done
 
-    printf '{"tokens":"%s"}' "$TOKENS"
+    RESULT=$(printf '{"tokens":"%s"}' "$TOKENS")
+    # Only cache a non-empty discovery so a transient empty read is not frozen in.
+    if [ -n "$TOKENS" ]; then printf '%s' "$RESULT" > "$CACHE"; fi
+    printf '%s' "$RESULT"
   EOT
   ]
 
