@@ -195,8 +195,14 @@ variable "byo_key_vault_name" {
 
 variable "oauth_token_wait_seconds" {
   type        = number
-  description = "How long to wait (seconds) for App Connector scale-set instances to publish their OAuth2 user codes to Key Vault before Terraform reads them back."
-  default     = 420
+  description = "Maximum time (seconds) to poll Key Vault for the App Connector scale-set instances' OAuth2 user codes before failing the apply. The poller starts immediately and returns as soon as a code is published, so this is an upper bound, not a fixed wait. Allow generous headroom: the appliance installs the Azure CLI at boot (3-5 min of dependency builds) BEFORE it can publish, on top of VM boot and connector token generation."
+  default     = 900
+}
+
+variable "oauth_token_poll_interval_seconds" {
+  type        = number
+  description = "How often (seconds) to poll Key Vault for the OAuth2 user codes. Lower values give faster feedback at the cost of more Azure CLI calls."
+  default     = 10
 }
 
 variable "app_connector_group_description" {

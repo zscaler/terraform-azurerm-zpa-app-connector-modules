@@ -276,17 +276,16 @@ resource "azurerm_key_vault_secret" "oauth_tokens" {
   depends_on = [module.oauth_key_vault]
 }
 
-resource "time_sleep" "wait_for_oauth_tokens" {
-  count           = local.use_provisioning_key ? 0 : 1
-  depends_on      = [module.ac_vm, module.oauth_key_vault, azurerm_key_vault_secret.oauth_tokens]
-  create_duration = "${var.oauth_token_wait_seconds}s"
-}
-
 # Read back the real OAuth2 user codes the VMs published. A single external data
 # source polls Key Vault via the Azure CLI until every expected secret holds a
-# real code (not the PENDING placeholder), or it times out, and returns them
-# comma-joined. This tolerates VM boot lag without hard-failing the apply, the
-# same way the AWS examples poll SSM.
+# real code (not the PENDING placeholder), then returns them comma-joined. The
+# poller starts immediately (no blind pre-sleep), polls on a short interval for
+# fast feedback, prints progress to stderr each attempt, and FAILS LOUDLY if the
+# codes never appear instead of silently creating the group with empty
+# user_codes. Failing fast is deliberate: a silent empty read leaves connectors
+# un-onboarded and, in CI, lets the job idle until the step timeout kills it
+# before the deferred `terraform destroy` runs, leaking VMs that exhaust the
+# region core quota for every later example. Mirrors the AWS SSM poll.
 data "external" "oauth_tokens" {
   count = local.use_provisioning_key ? 0 : 1
 
@@ -295,6 +294,8 @@ data "external" "oauth_tokens" {
     VAULT="${local.key_vault_name}"
     NAMES="${join(" ", local.oauth_secret_names)}"
     EXPECTED=${var.ac_count}
+    INTERVAL=${var.oauth_token_poll_interval_seconds}
+    DEADLINE=$(( $(date +%s) + ${var.oauth_token_wait_seconds} ))
     CACHE="${path.module}/.oauth_tokens_${random_string.suffix.result}.json"
 
     # Idempotence guard: OAuth2 discovery is a one-shot bootstrap step. Once the
@@ -307,12 +308,12 @@ data "external" "oauth_tokens" {
       exit 0
     fi
 
-    MAX_ATTEMPTS=24   # 24 * 30s = 12 minutes
     ATTEMPT=0
     TOKENS=""
     FOUND=0
 
-    while [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+    while :; do
+      ATTEMPT=$((ATTEMPT + 1))
       TOKENS=""
       FOUND=0
       for NAME in $NAMES; do
@@ -327,19 +328,31 @@ data "external" "oauth_tokens" {
         fi
       done
 
-      if [ "$FOUND" -ge "$EXPECTED" ]; then break; fi
-      sleep 30
-      ATTEMPT=$((ATTEMPT + 1))
+      echo "[oauth-poll] attempt $ATTEMPT: $FOUND/$EXPECTED codes published to $VAULT" >&2
+
+      if [ "$FOUND" -ge "$EXPECTED" ]; then
+        echo "[oauth-poll] all $EXPECTED OAuth2 user codes retrieved." >&2
+        break
+      fi
+
+      if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+        echo "[oauth-poll] TIMED OUT after ${var.oauth_token_wait_seconds}s: only $FOUND/$EXPECTED codes were published to Key Vault '$VAULT'." >&2
+        echo "[oauth-poll] Check that the App Connector VMs booted, started the zpa-connector service, and that their Managed Identity can write to the Key Vault." >&2
+        exit 1
+      fi
+
+      sleep "$INTERVAL"
     done
 
+    # Reaching here means every expected code was found (a timeout exits 1 above),
+    # so cache the successful discovery for idempotent re-reads.
     RESULT=$(printf '{"tokens":"%s"}' "$TOKENS")
-    # Only cache once every expected code is present so a partial read is not frozen in.
-    if [ "$FOUND" -ge "$EXPECTED" ]; then printf '%s' "$RESULT" > "$CACHE"; fi
+    printf '%s' "$RESULT" > "$CACHE"
     printf '%s' "$RESULT"
   EOT
   ]
 
-  depends_on = [time_sleep.wait_for_oauth_tokens]
+  depends_on = [module.ac_vm, azurerm_key_vault_secret.oauth_tokens]
 }
 
 locals {

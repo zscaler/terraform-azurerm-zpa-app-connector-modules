@@ -35,3 +35,12 @@ jobs:
       test_max_parallel: 1
       fail_fast: false
       terratest_action: Idempotence # keep in mind that this has to start with capital letter
+      # Terratest destroys via a deferred func, so a normal test failure still
+      # cleans up. But if the GitHub step TIMES OUT, the runner hard-kills
+      # `go test` before that deferred destroy runs, leaking VMs that consume the
+      # region core quota and fail every later example. The full apply ->
+      # idempotence re-plan -> destroy cycle includes an ephemeral Key Vault whose
+      # soft-delete purge alone can take ~10 min, so 30 min was too tight. Give
+      # the cycle enough headroom that it finishes (and destroys) instead of
+      # being killed mid-run.
+      apply_timeout: 60

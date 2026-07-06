@@ -279,20 +279,18 @@ module "ac_nsg" {
 #    user codes to Key Vault, then list and read back all secrets matching the
 #    deployment prefix and create the App Connector Group with the codes.
 ################################################################################
-resource "time_sleep" "wait_for_oauth_tokens" {
-  count           = local.use_provisioning_key ? 0 : 1
-  depends_on      = [module.ac_vmss, module.oauth_key_vault]
-  create_duration = "${var.oauth_token_wait_seconds}s"
-}
-
 # Discover and read back every OAuth2 user code that the scale-set instances
 # published to Key Vault. VMSS instance names are not known at plan time, so we
 # cannot enumerate per-secret data sources with for_each (the key set would be
 # unknown until apply, which Terraform rejects). Instead a single external data
 # source uses the Azure CLI to list secrets by this deployment's prefix and read
-# their values, returning them comma-joined. The value is unknown at plan
-# (allowed for a single data source) and resolves at apply, mirroring the AWS
-# ASG SSM discovery pattern.
+# their values, returning them comma-joined. The poller starts immediately (no
+# blind pre-sleep), polls on a short interval, prints progress to stderr, and
+# FAILS LOUDLY if no code appears before the deadline. Failing fast is
+# deliberate: a silent empty read leaves connectors un-onboarded and, in CI,
+# lets the job idle until the step timeout kills it before the deferred
+# `terraform destroy` runs, leaking scale-set VMs that exhaust the region core
+# quota for every later example. Mirrors the AWS ASG SSM discovery pattern.
 data "external" "oauth_tokens" {
   count = local.use_provisioning_key ? 0 : 1
 
@@ -300,6 +298,8 @@ data "external" "oauth_tokens" {
     set -o pipefail
     VAULT="${local.key_vault_name}"
     PREFIX="${local.oauth_secret_prefix}"
+    INTERVAL=${var.oauth_token_poll_interval_seconds}
+    DEADLINE=$(( $(date +%s) + ${var.oauth_token_wait_seconds} ))
     CACHE="${path.module}/.oauth_tokens_${random_string.suffix.result}.json"
 
     # Idempotence guard: OAuth2 discovery is a one-shot bootstrap step. Once the
@@ -312,20 +312,19 @@ data "external" "oauth_tokens" {
       exit 0
     fi
 
-    # Poll until at least one matching code is published, or we time out, to
-    # absorb the boot lag between an instance reaching ready and writing its
-    # /etc/issue code into Key Vault.
-    MAX_ATTEMPTS=24   # 24 * 30s = 12 minutes
     ATTEMPT=0
     TOKENS=""
+    COUNT=0
 
-    while [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; do
+    while :; do
+      ATTEMPT=$((ATTEMPT + 1))
       NAMES=$(az keyvault secret list \
         --vault-name "$VAULT" \
         --query "[?starts_with(name, '$PREFIX')].name" \
         --output tsv 2>/dev/null || echo "")
 
       TOKENS=""
+      COUNT=0
       for NAME in $NAMES; do
         VALUE=$(az keyvault secret show \
           --vault-name "$VAULT" \
@@ -333,23 +332,36 @@ data "external" "oauth_tokens" {
           --query value \
           --output tsv 2>/dev/null || echo "")
         if printf '%s' "$VALUE" | grep -Eq '^[A-Z0-9]{5}-[A-Z0-9]{5}$'; then
+          COUNT=$((COUNT + 1))
           if [ -z "$TOKENS" ]; then TOKENS="$VALUE"; else TOKENS="$TOKENS,$VALUE"; fi
         fi
       done
 
-      if [ -n "$TOKENS" ]; then break; fi
-      sleep 30
-      ATTEMPT=$((ATTEMPT + 1))
+      echo "[oauth-poll] attempt $ATTEMPT: $COUNT scale-set OAuth2 code(s) published to $VAULT (prefix $PREFIX)" >&2
+
+      if [ "$COUNT" -ge 1 ]; then
+        echo "[oauth-poll] retrieved $COUNT scale-set OAuth2 user code(s)." >&2
+        break
+      fi
+
+      if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+        echo "[oauth-poll] TIMED OUT after ${var.oauth_token_wait_seconds}s: no scale-set instance published an OAuth2 code (prefix '$PREFIX') to Key Vault '$VAULT'." >&2
+        echo "[oauth-poll] Check that the scale-set instances booted, started the zpa-connector service, and that their Managed Identity can write to the Key Vault." >&2
+        exit 1
+      fi
+
+      sleep "$INTERVAL"
     done
 
+    # Reaching here means at least one code was found (a timeout exits 1 above),
+    # so cache the successful discovery for idempotent re-reads.
     RESULT=$(printf '{"tokens":"%s"}' "$TOKENS")
-    # Only cache a non-empty discovery so a transient empty read is not frozen in.
-    if [ -n "$TOKENS" ]; then printf '%s' "$RESULT" > "$CACHE"; fi
+    printf '%s' "$RESULT" > "$CACHE"
     printf '%s' "$RESULT"
   EOT
   ]
 
-  depends_on = [time_sleep.wait_for_oauth_tokens]
+  depends_on = [module.ac_vmss, module.oauth_key_vault]
 }
 
 locals {

@@ -65,7 +65,6 @@ From ac_vmss directory execute:
 | <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3 |
 | <a name="provider_local"></a> [local](#provider\_local) | ~> 2.5.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6.0 |
-| <a name="provider_time"></a> [time](#provider\_time) | ~> 0.12 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | ~> 4.0.0 |
 
 ## Modules
@@ -90,7 +89,6 @@ From ac_vmss directory execute:
 | [local_file.testbed](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [local_file.user_data_file](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [time_sleep.wait_for_oauth_tokens](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [tls_private_key.key](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [external_external.oauth_tokens](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
@@ -129,7 +127,8 @@ From ac_vmss directory execute:
 | <a name="input_environment"></a> [environment](#input\_environment) | Customer defined environment tag. ie: Dev, QA, Prod, etc. | `string` | `"Development"` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | The name prefix for all your resources | `string` | `"zsac"` | no |
 | <a name="input_network_address_space"></a> [network\_address\_space](#input\_network\_address\_space) | VNet IP CIDR Range. All subnet resources that might get created (public, app connector) are derived from this /16 CIDR. If you require creating a VNet smaller than /16, you may need to explicitly define all other subnets via public\_subnets and ac\_subnets variables | `string` | `"10.1.0.0/16"` | no |
-| <a name="input_oauth_token_wait_seconds"></a> [oauth\_token\_wait\_seconds](#input\_oauth\_token\_wait\_seconds) | How long to wait (seconds) for App Connector scale-set instances to publish their OAuth2 user codes to Key Vault before Terraform reads them back. | `number` | `420` | no |
+| <a name="input_oauth_token_poll_interval_seconds"></a> [oauth\_token\_poll\_interval\_seconds](#input\_oauth\_token\_poll\_interval\_seconds) | How often (seconds) to poll Key Vault for the OAuth2 user codes. Lower values give faster feedback at the cost of more Azure CLI calls. | `number` | `10` | no |
+| <a name="input_oauth_token_wait_seconds"></a> [oauth\_token\_wait\_seconds](#input\_oauth\_token\_wait\_seconds) | Maximum time (seconds) to poll Key Vault for the App Connector scale-set instances' OAuth2 user codes before failing the apply. The poller starts immediately and returns as soon as a code is published, so this is an upper bound, not a fixed wait. Allow generous headroom: the appliance installs the Azure CLI at boot (3-5 min of dependency builds) BEFORE it can publish, on top of VM boot and connector token generation. | `number` | `900` | no |
 | <a name="input_onboarding_method"></a> [onboarding\_method](#input\_onboarding\_method) | App Connector onboarding method. "oauth" (default, recommended) enrolls connectors via OAuth2 user codes relayed through Azure Key Vault. "provisioning\_key" uses the legacy provisioning key flow. | `string` | `"oauth"` | no |
 | <a name="input_owner_tag"></a> [owner\_tag](#input\_owner\_tag) | Customer defined owner tag value. ie: Org, Dept, username, etc. | `string` | `"zsac-admin"` | no |
 | <a name="input_provisioning_key_association_type"></a> [provisioning\_key\_association\_type](#input\_provisioning\_key\_association\_type) | Specifies the provisioning key type for App Connectors or ZPA Private Service Edges. The supported values are CONNECTOR\_GRP and SERVICE\_EDGE\_GRP | `string` | `"CONNECTOR_GRP"` | no |
