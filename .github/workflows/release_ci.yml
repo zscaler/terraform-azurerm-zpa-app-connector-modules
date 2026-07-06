@@ -21,10 +21,17 @@ jobs:
     with:
       cloud: azure
       validate_max_parallel: 20
-      # Each example provisions its own VNet/NAT Gateway/Public IP plus an
-      # ephemeral Key Vault during the Idempotence apply. Cap concurrent apply
-      # jobs to keep within the subscription's default network/Public IP quotas
-      # and avoid soft-deleted Key Vault name collisions.
-      test_max_parallel: 2
+      # Run the Idempotence example tests strictly one at a time.
+      #
+      # Each example deploys ac_count=2 App Connectors on Standard_D4s_v* (4 vCPU
+      # each = 8 cores) plus a bastion VM, so a single example consumes ~9 of the
+      # 10 Total Regional Cores allowed by default in westus2. Running two or more
+      # examples concurrently exceeds that quota and Azure rejects the VM create
+      # with "409 Conflict / OperationNotAllowed: exceeding approved Total Regional
+      # Cores quota" (and can also hang the oauth_tokens data source until the job
+      # times out). Because every Idempotence job applies AND destroys within the
+      # same job, max_parallel=1 guarantees each example frees its cores before the
+      # next one applies, keeping the whole matrix within quota.
+      test_max_parallel: 1
       fail_fast: false
       terratest_action: Idempotence # keep in mind that this has to start with capital letter
