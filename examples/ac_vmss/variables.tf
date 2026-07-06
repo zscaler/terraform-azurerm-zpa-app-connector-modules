@@ -529,8 +529,8 @@ variable "byo_key_vault_name" {
 
 variable "oauth_token_wait_seconds" {
   type        = number
-  description = "Maximum time (seconds) to poll Key Vault for the App Connector scale-set instances' OAuth2 user codes before failing the apply. The poller starts immediately and returns as soon as a code is published, so this is an upper bound, not a fixed wait. Allow generous headroom: the appliance installs the Azure CLI at boot (3-5 min of dependency builds) BEFORE it can publish, on top of VM boot and connector token generation."
-  default     = 900
+  description = "Maximum time (seconds) to poll Key Vault for the App Connector scale-set instances' OAuth2 user codes before failing the apply. The poller starts immediately and returns as soon as a code is published, so this is an upper bound, not a fixed wait. VMSS needs more headroom than fixed VMs: the orchestrated scale-set resource returns almost instantly, so its instances only START provisioning AFTER polling begins, then must boot, install the Azure CLI (3-5 min of dependency builds), onboard the connector, and write their code to Key Vault."
+  default     = 1200
 }
 
 variable "oauth_token_poll_interval_seconds" {
