@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.3.0...v1.3.1) (2026-07-07)
+
+### Bug Fixes
+
+* **bastion:** default to Standard_B2ts_v2 to avoid SkuNotAvailable ([#25](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/issues/25)) ([63aecd1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/commit/63aecd1a47a4fe3830f1b1829e1a697e00745b91))
+
 ### [1.2.1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.2.0...v1.2.1) (2025-12-17)
 
 
