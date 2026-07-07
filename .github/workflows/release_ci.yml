@@ -21,26 +21,18 @@ jobs:
     with:
       cloud: azure
       validate_max_parallel: 20
-      # Run the Idempotence example tests strictly one at a time.
+      # The release gate runs `Plan` only: it validates that every example still
+      # produces a clean `terraform plan`, without deploying real VMs.
       #
-      # Each example deploys ac_count=2 App Connectors on Standard_D4s_v* (4 vCPU
-      # each = 8 cores) plus a bastion VM, so a single example consumes ~9 of the
-      # 10 Total Regional Cores allowed by default in westus2. Running two or more
-      # examples concurrently exceeds that quota and Azure rejects the VM create
-      # with "409 Conflict / OperationNotAllowed: exceeding approved Total Regional
-      # Cores quota" (and can also hang the oauth_tokens data source until the job
-      # times out). Because every Idempotence job applies AND destroys within the
-      # same job, max_parallel=1 guarantees each example frees its cores before the
-      # next one applies, keeping the whole matrix within quota.
-      test_max_parallel: 1
+      # Full apply -> idempotence -> destroy runs (which spin up App Connectors +
+      # a bastion and are bounded by the westus2 core quota) are intentionally NOT
+      # run for the whole matrix on every release. They are flaky and expensive at
+      # scale, and repeatedly exhausted the region quota. Instead, run real deploy
+      # validation on demand for the specific example(s) you touched via the
+      # `/idempotence <path>` ChatOps command (idempotence-command.yml) before
+      # cutting a release.
+      #
+      # Plan deploys nothing, so the examples can run in parallel with no quota risk.
+      test_max_parallel: 10
       fail_fast: false
-      terratest_action: Idempotence # keep in mind that this has to start with capital letter
-      # Terratest destroys via a deferred func, so a normal test failure still
-      # cleans up. But if the GitHub step TIMES OUT, the runner hard-kills
-      # `go test` before that deferred destroy runs, leaking VMs that consume the
-      # region core quota and fail every later example. The full apply ->
-      # idempotence re-plan -> destroy cycle includes an ephemeral Key Vault whose
-      # soft-delete purge alone can take ~10 min, so 30 min was too tight. Give
-      # the cycle enough headroom that it finishes (and destroys) instead of
-      # being killed mid-run.
-      apply_timeout: 60
+      terratest_action: Plan # keep in mind that this has to start with capital letter
