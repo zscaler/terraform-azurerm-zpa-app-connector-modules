@@ -98,6 +98,10 @@ acvm_instance_type = "Standard_D4s_v4"
 #acvm_instance_type                         = "Standard_D8s_v5"   # Intel
 #acvm_instance_type                         = "Standard_D8as_v5"  # AMD (cost-optimized)
 
+## 6a. Bastion/jump host VM size. (Default: Standard_B2ts_v2). Uncomment to override,
+##     e.g. if the chosen SKU is capacity-restricted/unavailable in your region.
+#bastion_instance_type                      = "Standard_B2ts_v2"
+
 ## 7. The number of App Connector appliances to provision. Each incremental App Connector will be created in alternating 
 ##     subnets based on the zones or byo_subnet_names variable and loop through for any deployments where ac_count > zones.
 ##     E.g. ac_count set to 4 and 2 zones set ['1","2"] will create 2x ACs in AZ1 and 2x ACs in AZ2

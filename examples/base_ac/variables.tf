@@ -150,6 +150,12 @@ variable "bastion_nsg_source_prefix" {
   default     = "*"
 }
 
+variable "bastion_instance_type" {
+  type        = string
+  description = "VM size for the Bastion/jump host. Defaults to the burstable Standard_B2ts_v2. Standard_B1s (the previous default) is retired / capacity-restricted in many regions and fails with SkuNotAvailable. Override with any SKU available in your target region."
+  default     = "Standard_B2ts_v2"
+}
+
 # ZPA App Connector onboarding method selection
 variable "onboarding_method" {
   type        = string
