@@ -97,6 +97,10 @@
 #acvm_instance_type                         = "Standard_D8s_v5"   # Intel
 #acvm_instance_type                         = "Standard_D8as_v5"  # AMD (cost-optimized)
 
+## 6a. Bastion/jump host VM size. (Default: Standard_B2ts_v2). Uncomment to override,
+##     e.g. if the chosen SKU is capacity-restricted/unavailable in your region.
+#bastion_instance_type                      = "Standard_B2ts_v2"
+
 ## 7. By default, no zones are specified in any resource creation meaning they are either auto-assigned by Azure 
 ##    (Virtual Machines and NAT Gateways) or Zone-Redundant (Public IP) based on whatever default configuration is.
 ##    Setting this value to true will do the following:

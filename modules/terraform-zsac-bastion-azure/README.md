@@ -40,7 +40,7 @@ No modules.
 | <a name="input_instance_image_publisher"></a> [instance\_image\_publisher](#input\_instance\_image\_publisher) | The Bastion Host Ubuntu image publisher | `string` | `"Canonical"` | no |
 | <a name="input_instance_image_sku"></a> [instance\_image\_sku](#input\_instance\_image\_sku) | The Bastion Host Ubuntu image sku | `string` | `"22_04-lts"` | no |
 | <a name="input_instance_image_version"></a> [instance\_image\_version](#input\_instance\_image\_version) | The Bastion Host Ubuntu image version | `string` | `"latest"` | no |
-| <a name="input_instance_size"></a> [instance\_size](#input\_instance\_size) | The Azure image type/size | `string` | `"Standard_B1s"` | no |
+| <a name="input_instance_size"></a> [instance\_size](#input\_instance\_size) | VM size for the Bastion/jump host. Defaults to the burstable Standard\_B2ts\_v2 (Bsv2 generation). The previous Standard\_B1s default has been retired / is capacity-restricted in many regions (e.g. southeastasia, australiasoutheast) and fails with SkuNotAvailable. Override with any SKU available in your target region. | `string` | `"Standard_B2ts_v2"` | no |
 | <a name="input_location"></a> [location](#input\_location) | ZPA App Connector Azure Region | `string` | n/a | yes |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | A prefix to associate to all the Bastion Host module resources | `string` | n/a | yes |
 | <a name="input_public_subnet_id"></a> [public\_subnet\_id](#input\_public\_subnet\_id) | The id of public subnet where the bastion host has to be attached | `string` | n/a | yes |

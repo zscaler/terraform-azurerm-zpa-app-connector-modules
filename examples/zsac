@@ -400,6 +400,16 @@ first_run="yes"
                 esac
             done
         fi
+
+        # Bastion/jump host VM size. Standard_B1s (the old default) is retired /
+        # capacity-restricted in many regions, so default to the newer burstable
+        # Standard_B2ts_v2 and let the user override with any region-available SKU.
+        bastion_instance_type_default=Standard_B2ts_v2
+        echo "${CYAN}Bastion/jump host VM size. Suggested burstable options: Standard_B2ts_v2, Standard_B2s_v2, Standard_B1ms.${RESET}"
+        read -r -p "${CYAN}Enter desired Azure VM size for the Bastion host. [Default=$bastion_instance_type_default]: ${RESET}" bastion_instance_type_input
+        bastion_instance_type=${bastion_instance_type_input:-$bastion_instance_type_default}
+        echo "${GREEN}Bastion VM size: ${bastion_instance_type} selected...${RESET}"
+        echo "export TF_VAR_bastion_instance_type=${bastion_instance_type}" >> .zsacrc
     fi
 
     # if .zsacrc is not present we'll assume that Azure env was never set

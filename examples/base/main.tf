@@ -72,4 +72,5 @@ module "bastion" {
   public_subnet_id          = module.network.bastion_subnet_ids[0]
   ssh_key                   = tls_private_key.key.public_key_openssh
   bastion_nsg_source_prefix = var.bastion_nsg_source_prefix
+  instance_size             = var.bastion_instance_type
 }
