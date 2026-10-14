@@ -181,6 +181,19 @@ locals {
   provisioning_key_value = local.use_provisioning_key ? try(module.zpa_provisioning_key[0].provisioning_key, "") : ""
   user_data_script       = var.use_zscaler_image ? "${path.module}/../../scripts/user_data_zscaler.sh" : "${path.module}/../../scripts/user_data_rhel9.sh"
 
+  # The image must match the bootstrap script selected above.
+  acvm_image = var.use_zscaler_image ? {
+    publisher = var.acvm_image_publisher
+    offer     = var.acvm_image_offer
+    sku       = var.acvm_image_sku
+    version   = var.acvm_image_version
+    } : {
+    publisher = var.rhel_image_publisher
+    offer     = var.rhel_image_offer
+    sku       = var.rhel_image_sku
+    version   = var.rhel_image_version
+  }
+
   appuserdata = templatefile(local.user_data_script, {
     onboarding_method          = local.use_provisioning_key ? "provisioning_key" : "oauth"
     provisioning_key           = local.provisioning_key_value
@@ -209,10 +222,11 @@ module "ac_vmss" {
   zones_enabled              = var.zones_enabled
   zones                      = var.zones
   acvm_instance_type         = var.acvm_instance_type
-  acvm_image_publisher       = var.acvm_image_publisher
-  acvm_image_offer           = var.acvm_image_offer
-  acvm_image_sku             = var.acvm_image_sku
-  acvm_image_version         = var.acvm_image_version
+  acvm_image_publisher       = local.acvm_image.publisher
+  acvm_image_offer           = local.acvm_image.offer
+  acvm_image_sku             = local.acvm_image.sku
+  acvm_image_version         = local.acvm_image.version
+  acvm_image_plan_enabled    = var.use_zscaler_image
   ac_nsg_id                  = module.ac_nsg.ac_nsg_id[0]
   encryption_at_host_enabled = var.encryption_at_host_enabled
   identity_ids               = local.use_provisioning_key ? [] : [azurerm_user_assigned_identity.vmss_oauth[0].id]

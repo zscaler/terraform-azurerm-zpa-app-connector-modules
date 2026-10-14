@@ -71,6 +71,8 @@ resource "azurerm_linux_virtual_machine" "bastion_vm" {
   size                  = var.instance_size
   admin_username        = var.server_admin_username
   computer_name         = "${var.name_prefix}-bastion-${var.resource_tag}"
+  secure_boot_enabled   = var.secure_boot_enabled
+  vtpm_enabled          = var.vtpm_enabled
   admin_ssh_key {
     username   = var.server_admin_username
     public_key = "${trimspace(var.ssh_key)} ${var.server_admin_username}@me.io"

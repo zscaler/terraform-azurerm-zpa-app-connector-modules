@@ -11,6 +11,9 @@ We are leveraging the [Zscaler ZPA Provider](https://github.com/zscaler/terrafor
 There are conditional create options for almost all dependent resources should they already exist (VNet, subnets, NAT Gateways, Public IPs, NSGs, etc.)
 
 
+## Image selection and Trusted Launch
+By default the scale set uses the Zscaler Marketplace image, which is Generation 1 only. Set `use_zscaler_image = false` to deploy the RedHat RHEL 9 Generation 2 image instead, bootstrapped from the Zscaler yum repository. Trusted Launch (Secure Boot + vTPM) is not available for scale sets yet, because the azurerm provider does not expose it on orchestrated scale sets; use the `ac` or `base_ac` deployment types if Trusted Launch is required. See [App Connector Image and Trusted Launch](../../README.md#app-connector-image-and-trusted-launch) for details.
+
 ## Caveats/Considerations
 - WSL2 DNS bug: If you are trying to run these Azure terraform deployments specifically from a Windows WSL2 instance like Ubuntu and receive an error containing a message similar to this "dial tcp: lookup management.azure.com on 172.21.240.1:53: cannot unmarshal DNS message" please refer here for a WSL2 resolv.conf fix. https://github.com/microsoft/WSL/issues/5420#issuecomment-646479747.
 
@@ -50,7 +53,7 @@ From ac_vmss directory execute:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.9.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.0 |
@@ -63,7 +66,7 @@ From ac_vmss directory execute:
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 5.9.0 |
 | <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3 |
 | <a name="provider_local"></a> [local](#provider\_local) | ~> 2.5.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.6.0 |
@@ -101,7 +104,7 @@ From ac_vmss directory execute:
 | <a name="input_acvm_image_offer"></a> [acvm\_image\_offer](#input\_acvm\_image\_offer) | Azure Marketplace Zscaler App Connector Image Offer | `string` | `"zscaler-private-access"` | no |
 | <a name="input_acvm_image_publisher"></a> [acvm\_image\_publisher](#input\_acvm\_image\_publisher) | Azure Marketplace Zscaler App Connector Image Publisher | `string` | `"zscaler"` | no |
 | <a name="input_acvm_image_sku"></a> [acvm\_image\_sku](#input\_acvm\_image\_sku) | Azure Marketplace Zscaler App Connector Image SKU | `string` | `"zpa-con-azure"` | no |
-| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). | `string` | `"2025.11.12"` | no |
+| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). Azure rejects deprecated versions with ImageVersionDeprecated, so the pin must be bumped when Zscaler retires it. | `string` | `"2026.07.07"` | no |
 | <a name="input_acvm_instance_type"></a> [acvm\_instance\_type](#input\_acvm\_instance\_type) | App Connector Image size. Default is Standard\_D4s\_v5 (4 vCPU Intel). AMD alternatives (Standard\_D4as\_v5) are typically 10-15% cheaper. For AppProtection workloads, use 8-core instances (Standard\_D8s\_v5 or Standard\_D8as\_v5). | `string` | `"Standard_D4s_v5"` | no |
 | <a name="input_app_connector_group_city_country"></a> [app\_connector\_group\_city\_country](#input\_app\_connector\_group\_city\_country) | Optional: City and country of this App Connector Group. example 'San Jose, US' | `string` | `""` | no |
 | <a name="input_app_connector_group_country_code"></a> [app\_connector\_group\_country\_code](#input\_app\_connector\_group\_country\_code) | Optional: Country code of this App Connector Group. example 'US' | `string` | `"US"` | no |
@@ -153,6 +156,10 @@ From ac_vmss directory execute:
 | <a name="input_provisioning_key_max_usage"></a> [provisioning\_key\_max\_usage](#input\_provisioning\_key\_max\_usage) | The maximum number of instances where this provisioning key can be used for enrolling an App Connector or Service Edge | `number` | `10` | no |
 | <a name="input_provisioning_key_name"></a> [provisioning\_key\_name](#input\_provisioning\_key\_name) | Optional name for the Provisioning Key. If empty, the App Connector Group name is used. | `string` | `""` | no |
 | <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | Public/Bastion Subnets to create in VNet. This is only required if you want to override the default subnets that this code creates via network\_address\_space variable. | `list(string)` | `null` | no |
+| <a name="input_rhel_image_offer"></a> [rhel\_image\_offer](#input\_rhel\_image\_offer) | RHEL image offer used when use\_zscaler\_image is false | `string` | `"RHEL"` | no |
+| <a name="input_rhel_image_publisher"></a> [rhel\_image\_publisher](#input\_rhel\_image\_publisher) | RHEL image publisher used when use\_zscaler\_image is false | `string` | `"RedHat"` | no |
+| <a name="input_rhel_image_sku"></a> [rhel\_image\_sku](#input\_rhel\_image\_sku) | RHEL image SKU used when use\_zscaler\_image is false. Must be a Generation 2 SKU for Trusted Launch. | `string` | `"9-lvm-gen2"` | no |
+| <a name="input_rhel_image_version"></a> [rhel\_image\_version](#input\_rhel\_image\_version) | RHEL image version used when use\_zscaler\_image is false | `string` | `"latest"` | no |
 | <a name="input_scale_in_cooldown"></a> [scale\_in\_cooldown](#input\_scale\_in\_cooldown) | Amount of time after scale in before scale in is evaluated again. | `string` | `"PT15M"` | no |
 | <a name="input_scale_in_count"></a> [scale\_in\_count](#input\_scale\_in\_count) | Number of ACs to bring up on scale in event. | `string` | `"1"` | no |
 | <a name="input_scale_in_evaluation_period"></a> [scale\_in\_evaluation\_period](#input\_scale\_in\_evaluation\_period) | Amount of time the average of scaling metric is evaluated over. | `string` | `"PT5M"` | no |
@@ -170,7 +177,7 @@ From ac_vmss directory execute:
 | <a name="input_scheduled_scaling_timezone"></a> [scheduled\_scaling\_timezone](#input\_scheduled\_scaling\_timezone) | Timezone the times for the scheduled scaling profile are specified in. | `string` | `"Pacific Standard Time"` | no |
 | <a name="input_scheduled_scaling_vmss_min_acs"></a> [scheduled\_scaling\_vmss\_min\_acs](#input\_scheduled\_scaling\_vmss\_min\_acs) | Minimum number of ACs in vmss for scheduled scaling profile. | `number` | `2` | no |
 | <a name="input_tls_key_algorithm"></a> [tls\_key\_algorithm](#input\_tls\_key\_algorithm) | algorithm for tls\_private\_key resource | `string` | `"RSA"` | no |
-| <a name="input_use_zscaler_image"></a> [use\_zscaler\_image](#input\_use\_zscaler\_image) | Whether to use the Zscaler App Connector Marketplace image (true) or a RHEL9 base image bootstrapped via the Zscaler yum repo (false) | `bool` | `true` | no |
+| <a name="input_use_zscaler_image"></a> [use\_zscaler\_image](#input\_use\_zscaler\_image) | Whether to deploy the Zscaler App Connector Marketplace image (true, uses acvm\_image\_*) or a RedHat RHEL 9 Generation 2 image bootstrapped via the Zscaler yum repo (false, uses rhel\_image\_*). The Zscaler Marketplace image is Generation 1 only, so Trusted Launch requires false. | `bool` | `true` | no |
 | <a name="input_vmss_default_acs"></a> [vmss\_default\_acs](#input\_vmss\_default\_acs) | Default number of ACs in vmss. | `number` | `2` | no |
 | <a name="input_vmss_max_acs"></a> [vmss\_max\_acs](#input\_vmss\_max\_acs) | Maximum number of ACs in vmss. | `number` | `10` | no |
 | <a name="input_vmss_min_acs"></a> [vmss\_min\_acs](#input\_vmss\_min\_acs) | Minimum number of ACs in vmss. | `number` | `2` | no |

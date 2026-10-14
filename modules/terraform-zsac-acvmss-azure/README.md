@@ -11,6 +11,12 @@ az vm image terms show --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 ```
 
+## Image and Trusted Launch
+
+The image is set by the `acvm_image_*` inputs (or `acvm_source_image_id` for a custom image) and defaults to the Zscaler App Connector Marketplace image. For images without a Marketplace purchase plan, such as `RedHat:RHEL:9-lvm-gen2`, set `acvm_image_plan_enabled = false`; Azure rejects a plan block on those images.
+
+Trusted Launch (Secure Boot + vTPM) is not supported by this module yet: the azurerm provider does not expose those settings on `azurerm_orchestrated_virtual_machine_scale_set`.
+
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -18,7 +24,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.9.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.0 |
 
@@ -26,7 +32,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 5.9.0 |
 
 ## Modules
 
@@ -47,9 +53,10 @@ No modules.
 | <a name="input_ac_subnet_id"></a> [ac\_subnet\_id](#input\_ac\_subnet\_id) | App Connector subnet id | `list(string)` | n/a | yes |
 | <a name="input_ac_username"></a> [ac\_username](#input\_ac\_username) | Default App Connector admin/root username | `string` | `"zsroot"` | no |
 | <a name="input_acvm_image_offer"></a> [acvm\_image\_offer](#input\_acvm\_image\_offer) | Azure Marketplace Zscaler App Connector Image Offer | `string` | `"zscaler-private-access"` | no |
+| <a name="input_acvm_image_plan_enabled"></a> [acvm\_image\_plan\_enabled](#input\_acvm\_image\_plan\_enabled) | Whether the image carries an Azure Marketplace purchase plan. True for the Zscaler App Connector image; set to false for plan-less images such as RedHat:RHEL, otherwise Azure rejects the deployment. | `bool` | `true` | no |
 | <a name="input_acvm_image_publisher"></a> [acvm\_image\_publisher](#input\_acvm\_image\_publisher) | Azure Marketplace Zscaler App Connector Image Publisher | `string` | `"zscaler"` | no |
 | <a name="input_acvm_image_sku"></a> [acvm\_image\_sku](#input\_acvm\_image\_sku) | Azure Marketplace Zscaler App Connector Image SKU | `string` | `"zpa-con-azure"` | no |
-| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). | `string` | `"2025.11.12"` | no |
+| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). Azure rejects deprecated versions with ImageVersionDeprecated, so the pin must be bumped when Zscaler retires it. | `string` | `"2026.07.07"` | no |
 | <a name="input_acvm_instance_type"></a> [acvm\_instance\_type](#input\_acvm\_instance\_type) | App Connector Image size. Default is Standard\_D4s\_v5 (4 vCPU Intel). AMD alternatives (Standard\_D4as\_v5) are typically 10-15% cheaper. For AppProtection workloads, use 8-core instances (Standard\_D8s\_v5 or Standard\_D8as\_v5). | `string` | `"Standard_D4s_v5"` | no |
 | <a name="input_acvm_source_image_id"></a> [acvm\_source\_image\_id](#input\_acvm\_source\_image\_id) | Custom App Connector Source Image ID. Set this value to the path of a local subscription Microsoft.Compute image to override the App Connector deployment instead of using the marketplace publisher | `string` | `null` | no |
 | <a name="input_backend_address_pool"></a> [backend\_address\_pool](#input\_backend\_address\_pool) | Azure LB Backend Address Pool ID for NIC association | `string` | `null` | no |

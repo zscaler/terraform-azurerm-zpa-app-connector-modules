@@ -2,19 +2,21 @@
 
 This module creates all Azure VM, NSG, and Public IP resources needed to deploy a publicly accessible bastion/jump host for App Connector Greenfield/POV environments.
 
+The bastion uses the Generation 2 Ubuntu 22.04 image (`22_04-lts-gen2`) with Trusted Launch (`secure_boot_enabled` and `vtpm_enabled`) enabled by default. Both settings require a Generation 2 image, so set them to `false` if you override `instance_image_sku` with a Generation 1 SKU.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.9.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 5.9.0 |
 
 ## Modules
 
@@ -38,7 +40,7 @@ No modules.
 | <a name="input_global_tags"></a> [global\_tags](#input\_global\_tags) | Populate any custom user defined tags from a map | `map(string)` | `{}` | no |
 | <a name="input_instance_image_offer"></a> [instance\_image\_offer](#input\_instance\_image\_offer) | The Bastion Host Ubuntu image offer | `string` | `"0001-com-ubuntu-server-jammy"` | no |
 | <a name="input_instance_image_publisher"></a> [instance\_image\_publisher](#input\_instance\_image\_publisher) | The Bastion Host Ubuntu image publisher | `string` | `"Canonical"` | no |
-| <a name="input_instance_image_sku"></a> [instance\_image\_sku](#input\_instance\_image\_sku) | The Bastion Host Ubuntu image sku | `string` | `"22_04-lts"` | no |
+| <a name="input_instance_image_sku"></a> [instance\_image\_sku](#input\_instance\_image\_sku) | The Bastion Host Ubuntu image sku. Defaults to the Generation 2 image, which is required for Trusted Launch. | `string` | `"22_04-lts-gen2"` | no |
 | <a name="input_instance_image_version"></a> [instance\_image\_version](#input\_instance\_image\_version) | The Bastion Host Ubuntu image version | `string` | `"latest"` | no |
 | <a name="input_instance_size"></a> [instance\_size](#input\_instance\_size) | VM size for the Bastion/jump host. Defaults to the burstable Standard\_B2ts\_v2 (Bsv2 generation). The previous Standard\_B1s default has been retired / is capacity-restricted in many regions (e.g. southeastasia, australiasoutheast) and fails with SkuNotAvailable. Override with any SKU available in your target region. | `string` | `"Standard_B2ts_v2"` | no |
 | <a name="input_location"></a> [location](#input\_location) | ZPA App Connector Azure Region | `string` | n/a | yes |
@@ -46,8 +48,10 @@ No modules.
 | <a name="input_public_subnet_id"></a> [public\_subnet\_id](#input\_public\_subnet\_id) | The id of public subnet where the bastion host has to be attached | `string` | n/a | yes |
 | <a name="input_resource_group"></a> [resource\_group](#input\_resource\_group) | Main Resource Group Name | `string` | n/a | yes |
 | <a name="input_resource_tag"></a> [resource\_tag](#input\_resource\_tag) | A tag to associate to all the Bastion Host module resources | `string` | `""` | no |
+| <a name="input_secure_boot_enabled"></a> [secure\_boot\_enabled](#input\_secure\_boot\_enabled) | Enable Secure Boot (Trusted Launch) on the bastion host. Requires a Generation 2 image. | `bool` | `true` | no |
 | <a name="input_server_admin_username"></a> [server\_admin\_username](#input\_server\_admin\_username) | Username configured for the Bastion Host root/admin account | `string` | `"ubuntu"` | no |
 | <a name="input_ssh_key"></a> [ssh\_key](#input\_ssh\_key) | SSH Key for instances | `string` | n/a | yes |
+| <a name="input_vtpm_enabled"></a> [vtpm\_enabled](#input\_vtpm\_enabled) | Enable the virtual TPM (Trusted Launch) on the bastion host. Requires a Generation 2 image. | `bool` | `true` | no |
 
 ## Outputs
 

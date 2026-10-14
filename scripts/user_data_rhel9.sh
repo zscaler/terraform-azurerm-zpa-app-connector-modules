@@ -7,9 +7,9 @@
 #   - provisioning_key : write the ZPA provisioning key to the connector and let
 #                        it self-enroll. No Key Vault interaction required.
 #
-# Token storage on Azure uses Key Vault + the VM's system-assigned Managed
-# Identity. The VM authenticates with `az login --identity`, so no secrets are
-# embedded in this script.
+# Token storage on Azure uses Key Vault + a user-assigned Managed Identity. The
+# VM authenticates with `az login --identity`, so no secrets are embedded in
+# this script.
 #
 # NOTE: This is a Terraform template file. Template variables are substituted by
 # Terraform before script execution. Shellcheck warnings about undefined
@@ -88,16 +88,23 @@ echo "Key Vault: $KEY_VAULT_NAME, Secret: $SECRET_NAME"
 # Start zpa-connector service to generate the OAuth token in /etc/issue
 systemctl start zpa-connector
 
-# Authenticate to Azure using a Managed Identity. Fixed VMs use a
-# system-assigned identity; orchestrated VM Scale Sets only support
-# user-assigned identities, so the identity's client id is injected by Terraform.
-%{ if is_vmss ~}
-az login --identity --username "${managed_identity_client_id}" --allow-no-subscriptions > /var/log/oauth-token-registration.log 2>&1 || \
-  echo "WARNING: az login --identity failed; check that the user-assigned identity is attached and granted Key Vault access"
-%{ else ~}
-az login --identity --allow-no-subscriptions > /var/log/oauth-token-registration.log 2>&1 || \
-  echo "WARNING: az login --identity failed; check that a system-assigned identity and Key Vault access are configured"
-%{ endif ~}
+# Authenticate to Azure using the user-assigned Managed Identity. User-assigned
+# identities are not the implicit default, so the client id MUST be supplied to
+# `az login --identity`. Retry to absorb the brief window after boot where the
+# Instance Metadata Service has not yet surfaced the attached identity.
+LOGIN_OK=0
+for attempt in $(seq 1 10); do
+  if az login --identity --username "${managed_identity_client_id}" --allow-no-subscriptions >> /var/log/oauth-token-registration.log 2>&1; then
+    LOGIN_OK=1
+    echo "az login --identity succeeded (attempt $attempt)."
+    break
+  fi
+  echo "az login --identity failed (attempt $attempt/10); retrying in 15s..."
+  sleep 15
+done
+if [ "$LOGIN_OK" -ne 1 ]; then
+  echo "WARNING: az login --identity never succeeded; check the user-assigned identity is attached and granted Key Vault access."
+fi
 
 # Wait for OAuth token to be generated (retry up to 30 times, 10s each = 5 min)
 MAX_RETRIES=30

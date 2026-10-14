@@ -61,8 +61,20 @@ variable "instance_image_offer" {
 
 variable "instance_image_sku" {
   type        = string
-  description = "The Bastion Host Ubuntu image sku"
-  default     = "22_04-lts"
+  description = "The Bastion Host Ubuntu image sku. Defaults to the Generation 2 image, which is required for Trusted Launch."
+  default     = "22_04-lts-gen2"
+}
+
+variable "secure_boot_enabled" {
+  type        = bool
+  description = "Enable Secure Boot (Trusted Launch) on the bastion host. Requires a Generation 2 image."
+  default     = true
+}
+
+variable "vtpm_enabled" {
+  type        = bool
+  description = "Enable the virtual TPM (Trusted Launch) on the bastion host. Requires a Generation 2 image."
+  default     = true
 }
 
 variable "instance_image_version" {

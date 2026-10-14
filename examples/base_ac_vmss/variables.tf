@@ -106,8 +106,8 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
-  default     = "2025.11.12"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift). Azure rejects deprecated versions with ImageVersionDeprecated, so the pin must be bumped when Zscaler retires it."
+  default     = "2026.07.07"
 }
 
 variable "zones_enabled" {
@@ -180,8 +180,32 @@ variable "app_connector_group_city_country" {
 
 variable "use_zscaler_image" {
   type        = bool
-  description = "Whether to use the Zscaler App Connector Marketplace image (true) or a RHEL9 base image bootstrapped via the Zscaler yum repo (false)"
+  description = "Whether to deploy the Zscaler App Connector Marketplace image (true, uses acvm_image_*) or a RedHat RHEL 9 Generation 2 image bootstrapped via the Zscaler yum repo (false, uses rhel_image_*). The Zscaler Marketplace image is Generation 1 only, so Trusted Launch requires false."
   default     = true
+}
+
+variable "rhel_image_publisher" {
+  type        = string
+  description = "RHEL image publisher used when use_zscaler_image is false"
+  default     = "RedHat"
+}
+
+variable "rhel_image_offer" {
+  type        = string
+  description = "RHEL image offer used when use_zscaler_image is false"
+  default     = "RHEL"
+}
+
+variable "rhel_image_sku" {
+  type        = string
+  description = "RHEL image SKU used when use_zscaler_image is false. Must be a Generation 2 SKU for Trusted Launch."
+  default     = "9-lvm-gen2"
+}
+
+variable "rhel_image_version" {
+  type        = string
+  description = "RHEL image version used when use_zscaler_image is false"
+  default     = "latest"
 }
 
 ################################################################################

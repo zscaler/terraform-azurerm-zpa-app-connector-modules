@@ -22,7 +22,7 @@ These deployment templates are intended to be fully functional and self service 
 
 Our Deployment scripts are leveraging Terraform v1.1.9 that includes full binary and provider support for MacOS M1 chips, but any Terraform version 0.13.7 should be generally supported.
 
-- provider registry.terraform.io/hashicorp/azurerm v4.56.x
+- provider registry.terraform.io/hashicorp/azurerm v5.9.x
 - provider registry.terraform.io/hashicorp/random v3.6.x
 - provider registry.terraform.io/hashicorp/local v2.5.x
 - provider registry.terraform.io/hashicorp/null v3.2.x
@@ -37,33 +37,10 @@ Our Deployment scripts are leveraging Terraform v1.1.9 that includes full binary
    2. Directory (tenant) ID
    3. Client Secret Value
 3. Azure Region (e.g. westus2) where App Connector resources are to be deployed
+4. The Azure resource providers these modules use must be registered in the subscription: `Microsoft.Compute`, `Microsoft.Network`, `Microsoft.KeyVault`, `Microsoft.ManagedIdentity`, `Microsoft.MarketplaceOrdering` (Zscaler Marketplace image only) and `Microsoft.Insights` (scale set autoscaling only). Starting with azurerm 5.x the provider no longer registers them automatically. Most subscriptions already have them; otherwise register them with `az provider register --namespace <name>`, or set `resource_provider_registrations = "legacy"` in the `azurerm` provider block to restore the 4.x behavior.
 
 ### Zscaler requirements
 This module leverages the Zscaler Private Access [ZPA Terraform Provider](https://registry.terraform.io/providers/zscaler/zpa/latest/docs) for the automated onboarding process. Before proceeding make sure you have the following pre-requistes ready.
-
-## Legacy ZPA API Authentication Framework
-
-1. A valid Zscaler Private Access subscription and portal access
-2. Zscaler ZPA API Keys. Details on how to find and generate ZPA API keys can be located [here](https://registry.terraform.io/providers/zscaler/zpa/latest/docs#legacy-api-framework)
-- `zpa_client_id`
-- `zpa_client_secret`
-- `zpa_customer_id`
-- `zpa_cloud` - This authentication parameter is optional and only required if authenticating to a non-production cloud i.e `BETA`, `GOV`, `GOVUS`, `ZPATWO`
-- `use_legacy_client` - This parameter MUST be set to `true` if your tenant is NOT migrated to Zidentity.
-
-```hcl
-provider "zpa" {
-  zpa_client_id            = "zpa_client_id" # pragma: allowlist secret
-  zpa_client_secret        = "zpa_client_secret" # pragma: allowlist secret
-  zpa_customer_id          = "zpa_client_secret" # pragma: allowlist secret
-  zpa_cloud                = "zpa_cloud" # pragma: allowlist secret
-  use_legacy_client        = "true" # pragma: allowlist secret
-}
-```
-
-3. (Optional) An existing App Connector Group and Provisioning Key. Otherwise, you can follow the prompts in the examples terraform.tfvars to create a new Connector Group and Provisioning Key
-
-See: [Zscaler App Connector Azure Deployment Guide](https://help.zscaler.com/zpa/connector-deployment-guide-microsoft-azure) for additional prerequisite provisioning steps.
 
 ## ZPA OneAPI Authentication Framework (OneAPI)
 
@@ -106,6 +83,29 @@ export ZSCALER_CLOUD="gov"
 
 See: [Zscaler App Connector Azure Deployment Guide](https://help.zscaler.com/zpa/connector-deployment-guide-microsoft-azure) for additional prerequisite provisioning steps.
 
+## Legacy ZPA API Authentication Framework
+
+1. A valid Zscaler Private Access subscription and portal access
+2. Zscaler ZPA API Keys. Details on how to find and generate ZPA API keys can be located [here](https://registry.terraform.io/providers/zscaler/zpa/latest/docs#legacy-api-framework)
+- `zpa_client_id`
+- `zpa_client_secret`
+- `zpa_customer_id`
+- `zpa_cloud` - This authentication parameter is optional and only required if authenticating to a non-production cloud i.e `BETA`, `GOV`, `GOVUS`, `ZPATWO`
+- `use_legacy_client` - This parameter MUST be set to `true` if your tenant is NOT migrated to Zidentity.
+
+```hcl
+provider "zpa" {
+  zpa_client_id            = "zpa_client_id" # pragma: allowlist secret
+  zpa_client_secret        = "zpa_client_secret" # pragma: allowlist secret
+  zpa_customer_id          = "zpa_client_secret" # pragma: allowlist secret
+  zpa_cloud                = "zpa_cloud" # pragma: allowlist secret
+  use_legacy_client        = "true" # pragma: allowlist secret
+}
+```
+
+3. (Optional) An existing App Connector Group and Provisioning Key. Otherwise, you can follow the prompts in the examples terraform.tfvars to create a new Connector Group and Provisioning Key
+
+See: [Zscaler App Connector Azure Deployment Guide](https://help.zscaler.com/zpa/connector-deployment-guide-microsoft-azure) for additional prerequisite provisioning steps.
 
 ## App Connector Onboarding Methods
 
@@ -135,6 +135,28 @@ onboarding_method = "provisioning_key"
 # byo_provisioning_key      = true
 # byo_provisioning_key_name = "my-existing-key"
 ```
+
+## App Connector Image and Trusted Launch
+
+The `use_zscaler_image` variable selects the App Connector VM image:
+
+| `use_zscaler_image` | Image | Generation | Trusted Launch |
+|---------------------|-------|------------|----------------|
+| `true` _(default)_ | Zscaler Marketplace image `zscaler:zscaler-private-access:zpa-con-azure`, pinned by `acvm_image_version` | Gen 1 | Not supported |
+| `false` | `RedHat:RHEL:9-lvm-gen2` (`rhel_image_*` variables), with the App Connector installed from the Zscaler yum repository at boot | Gen 2 | Enabled by default in the `ac` and `base_ac` examples |
+
+Trusted Launch (Secure Boot + vTPM) is required by the CIS Microsoft Azure Foundations Benchmark. The Zscaler Marketplace image is currently published as Generation 1 only, so Trusted Launch requires `use_zscaler_image = false`. In the `ac` and `base_ac` examples, `trusted_launch_enabled` defaults to on for the RHEL image and off for the Zscaler image; set it explicitly to override. Setting it to `true` together with `use_zscaler_image = true` fails at apply.
+
+```hcl
+# RHEL 9 Generation 2 image with Trusted Launch
+use_zscaler_image = false
+```
+
+~> **NOTE** The scale set examples (`ac_vmss`, `base_ac_vmss`) support the RHEL image but cannot enable Trusted Launch yet: the azurerm provider does not expose Secure Boot or vTPM on `azurerm_orchestrated_virtual_machine_scale_set`.
+
+~> **NOTE** Changing `use_zscaler_image` or `trusted_launch_enabled` on an existing deployment replaces the App Connector VMs. App Connectors keep no local state and re-enroll on boot, but keep at least one other connector in the group online or plan a maintenance window. Before this release, `use_zscaler_image = false` only switched the bootstrap script and still deployed the Zscaler image, so existing deployments using `false` are replaced with the RHEL image on the next apply.
+
+The default `acvm_image_version` is pinned for reproducible plans. Azure deprecates older Zscaler image versions, and a deprecated pin fails at apply with `ImageVersionDeprecated`; bump the pin or set it to `"latest"`. The bastion host in the greenfield examples uses the Generation 2 Ubuntu 22.04 image with Trusted Launch enabled.
 
 ## How to deploy
 Provisioning templates are available for customer use/reference to successfully deploy fully operational App Connector appliances once the prerequisites have been completed. Please follow the instructions located in [examples](examples/README.md).

@@ -18,10 +18,10 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "ac_vmss" {
   }
 
   network_interface {
-    name                          = "${var.name_prefix}-acvmss-nic-${var.resource_tag}"
-    enable_accelerated_networking = false
-    primary                       = true
-    network_security_group_id     = var.ac_nsg_id
+    name                           = "${var.name_prefix}-acvmss-nic-${var.resource_tag}"
+    accelerated_networking_enabled = false
+    primary                        = true
+    network_security_group_id      = var.ac_nsg_id
 
     ip_configuration {
       name      = "${var.name_prefix}-acvmss-nic-conf-${var.resource_tag}"
@@ -72,7 +72,7 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "ac_vmss" {
   }
 
   dynamic "plan" {
-    for_each = var.acvm_source_image_id == null ? [var.acvm_image_publisher] : []
+    for_each = var.acvm_source_image_id == null && var.acvm_image_plan_enabled ? [var.acvm_image_publisher] : []
 
     content {
       publisher = var.acvm_image_publisher

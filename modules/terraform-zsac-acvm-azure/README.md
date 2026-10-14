@@ -4,12 +4,18 @@ This module creates all the necessary VM, Network Interface, and NSG association
 
 ## Accept Azure Marketplace Terms
 
-This module will attempt to automatically accept the App Connector VM image terms for the Subscription(s) where App Connector is to be deployed. This can also be performaned and verified via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal:
+The Zscaler App Connector image terms must be accepted once per Subscription. The module accepts them only when `accept_marketplace_agreement = true`; leave it `false` when the terms are already accepted, otherwise Terraform fails with "already exists". The terms can also be accepted and verified via the Azure Portal, Cloud Shell or az cli / powershell with a valid admin user/service principal:
 
 ```sh
 az vm image terms show --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:latest
 ```
+
+## Image and Trusted Launch
+
+The image is set by the `acvm_image_*` inputs and defaults to the Zscaler App Connector Marketplace image, which is Generation 1 only. For images without a Marketplace purchase plan, such as `RedHat:RHEL:9-lvm-gen2`, set `acvm_image_plan_enabled = false`; Azure rejects a plan block on those images, and no Marketplace agreement is needed.
+
+`secure_boot_enabled` and `vtpm_enabled` enable Trusted Launch and require a Generation 2 image. Changing either replaces the VMs.
 
 
 <!-- BEGIN_TF_DOCS -->
@@ -18,7 +24,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.9.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.0 |
 
@@ -26,7 +32,7 @@ az vm image terms accept --urn zscaler:zscaler-private-access:zpa-con-azure:late
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.56.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 5.9.0 |
 
 ## Modules
 
@@ -52,18 +58,21 @@ No modules.
 | <a name="input_ac_username"></a> [ac\_username](#input\_ac\_username) | Default App Connector admin/root username | `string` | `"zsroot"` | no |
 | <a name="input_accept_marketplace_agreement"></a> [accept\_marketplace\_agreement](#input\_accept\_marketplace\_agreement) | Whether to accept the Zscaler App Connector Azure Marketplace image terms. A marketplace agreement is a subscription-level singleton; if the terms are already accepted in the subscription, leave this false to avoid an 'already exists' error. Set to true only for a new subscription where the terms have never been accepted. | `bool` | `false` | no |
 | <a name="input_acvm_image_offer"></a> [acvm\_image\_offer](#input\_acvm\_image\_offer) | Azure Marketplace Zscaler App Connector Image Offer | `string` | `"zscaler-private-access"` | no |
+| <a name="input_acvm_image_plan_enabled"></a> [acvm\_image\_plan\_enabled](#input\_acvm\_image\_plan\_enabled) | Whether the image carries an Azure Marketplace purchase plan. True for the Zscaler App Connector image; set to false for plan-less images such as RedHat:RHEL, otherwise Azure rejects the deployment. | `bool` | `true` | no |
 | <a name="input_acvm_image_publisher"></a> [acvm\_image\_publisher](#input\_acvm\_image\_publisher) | Azure Marketplace Zscaler App Connector Image Publisher | `string` | `"zscaler"` | no |
 | <a name="input_acvm_image_sku"></a> [acvm\_image\_sku](#input\_acvm\_image\_sku) | Azure Marketplace Zscaler App Connector Image SKU | `string` | `"zpa-con-azure"` | no |
-| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). | `string` | `"2025.11.12"` | no |
+| <a name="input_acvm_image_version"></a> [acvm\_image\_version](#input\_acvm\_image\_version) | Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to "latest" to always track the newest published image (may introduce plan drift). Azure rejects deprecated versions with ImageVersionDeprecated, so the pin must be bumped when Zscaler retires it. | `string` | `"2026.07.07"` | no |
 | <a name="input_acvm_instance_type"></a> [acvm\_instance\_type](#input\_acvm\_instance\_type) | App Connector Image size. Default is Standard\_D4s\_v5 (4 vCPU Intel). AMD alternatives (Standard\_D4as\_v5) are typically 10-15% cheaper. For AppProtection workloads, use 8-core instances (Standard\_D8s\_v5 or Standard\_D8as\_v5). | `string` | `"Standard_D4s_v5"` | no |
 | <a name="input_global_tags"></a> [global\_tags](#input\_global\_tags) | Populate any custom user defined tags from a map | `map(string)` | `{}` | no |
 | <a name="input_location"></a> [location](#input\_location) | App Connector Azure Region | `string` | n/a | yes |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | A prefix to associate to all the AC VM module resources | `string` | n/a | yes |
 | <a name="input_resource_group"></a> [resource\_group](#input\_resource\_group) | Main Resource Group Name | `string` | n/a | yes |
 | <a name="input_resource_tag"></a> [resource\_tag](#input\_resource\_tag) | A tag to associate to all the AC VM module resources | `string` | `""` | no |
+| <a name="input_secure_boot_enabled"></a> [secure\_boot\_enabled](#input\_secure\_boot\_enabled) | Enable Secure Boot (Trusted Launch). Requires a Generation 2 image; the Zscaler App Connector Marketplace image is currently Generation 1 only. Changing this forces VM replacement. | `bool` | `false` | no |
 | <a name="input_ssh_key"></a> [ssh\_key](#input\_ssh\_key) | SSH Key for instances | `string` | n/a | yes |
 | <a name="input_user_assigned_identity_id"></a> [user\_assigned\_identity\_id](#input\_user\_assigned\_identity\_id) | Resource ID of the user-assigned Managed Identity to attach to each App Connector VM. Used by the OAuth2 onboarding flow to authenticate to Key Vault. Created up front by the caller so its Key Vault grant is in place before the VM boots. | `string` | n/a | yes |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | Per-instance cloud-init (custom\_data) scripts, one entry per App Connector VM | `list(string)` | n/a | yes |
+| <a name="input_vtpm_enabled"></a> [vtpm\_enabled](#input\_vtpm\_enabled) | Enable the virtual TPM (Trusted Launch). Requires a Generation 2 image; the Zscaler App Connector Marketplace image is currently Generation 1 only. Changing this forces VM replacement. | `bool` | `false` | no |
 | <a name="input_zones"></a> [zones](#input\_zones) | Specify which availability zone(s) to deploy VM resources in if zones\_enabled variable is set to true | `list(string)` | <pre>[<br/>  "1"<br/>]</pre> | no |
 | <a name="input_zones_enabled"></a> [zones\_enabled](#input\_zones\_enabled) | Determine whether to provision App Connector VMs explicitly in defined zones (if supported by the Azure region provided in the location variable). If left false, Azure will automatically choose a zone and module will create an availability set resource instead for VM fault tolerance | `bool` | `false` | no |
 

@@ -102,8 +102,14 @@ variable "acvm_image_sku" {
 
 variable "acvm_image_version" {
   type        = string
-  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift)."
-  default     = "2025.11.12"
+  description = "Azure Marketplace App Connector Image Version. Pinned by default to a known-good version for reproducible plans; set to \"latest\" to always track the newest published image (may introduce plan drift). Azure rejects deprecated versions with ImageVersionDeprecated, so the pin must be bumped when Zscaler retires it."
+  default     = "2026.07.07"
+}
+
+variable "acvm_image_plan_enabled" {
+  type        = bool
+  description = "Whether the image carries an Azure Marketplace purchase plan. True for the Zscaler App Connector image; set to false for plan-less images such as RedHat:RHEL, otherwise Azure rejects the deployment."
+  default     = true
 }
 
 variable "acvm_source_image_id" {
