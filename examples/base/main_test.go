@@ -7,6 +7,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/internal/testhelpers"
 	"github.com/zscaler/terraform-modules-zscaler-tests-skeleton/pkg/testskeleton"
 )
 
@@ -16,17 +17,12 @@ func CreateTerraformOptions(t *testing.T) *terraform.Options {
 		log.Fatalf("Error generating terraform vars info: %v", err)
 	}
 
-	location := os.Getenv("ARM_LOCATION")
-	if location == "" {
-		location = "westus2"
-	}
-
 	return terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: ".",
 		VarFiles:     []string{"terraform.tfvars"},
 		Vars: map[string]interface{}{
 			"name_prefix":  varsInfo.NamePrefix,
-			"arm_location": location,
+			"arm_location": armLocation(),
 		},
 		Logger:               logger.Default,
 		Lock:                 true,
@@ -35,13 +31,21 @@ func CreateTerraformOptions(t *testing.T) *terraform.Options {
 	})
 }
 
+func armLocation() string {
+	if location := os.Getenv("ARM_LOCATION"); location != "" {
+		return location
+	}
+	return "westus2"
+}
+
 func TestValidate(t *testing.T) {
 	testskeleton.ValidateCode(t, nil)
 }
 
 func TestPlan(t *testing.T) {
-	testskeleton.PlanInfraCheckErrors(t, CreateTerraformOptions(t),
-		[]testskeleton.AssertExpression{}, "No errors are expected")
+	plan := testhelpers.Plan(t, CreateTerraformOptions(t))
+	testhelpers.AssertBastionTrustedLaunch(t, plan)
+	testhelpers.AssertImagePublished(t, armLocation(), testhelpers.UbuntuJammyGen2)
 }
 
 func TestApply(t *testing.T) {

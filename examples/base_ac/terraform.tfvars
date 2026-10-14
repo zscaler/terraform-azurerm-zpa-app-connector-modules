@@ -102,6 +102,15 @@ acvm_instance_type = "Standard_D4s_v4"
 ##     e.g. if the chosen SKU is capacity-restricted/unavailable in your region.
 #bastion_instance_type                      = "Standard_B2ts_v2"
 
+## 6a. App Connector image. By default the Zscaler App Connector Marketplace image (Generation 1) is deployed.
+##     Set use_zscaler_image to false to deploy a RedHat RHEL 9 Generation 2 image instead, bootstrapped from
+##     the Zscaler yum repository. Trusted Launch (Secure Boot + vTPM) is then enabled automatically; uncomment
+##     trusted_launch_enabled = false to opt out. Trusted Launch is not supported on the Zscaler image.
+##     Changing either value on an existing deployment replaces the App Connector VMs.
+
+#use_zscaler_image                          = false
+#trusted_launch_enabled                     = false
+
 ## 7. The number of App Connector appliances to provision. Each incremental App Connector will be created in alternating 
 ##     subnets based on the zones or byo_subnet_names variable and loop through for any deployments where ac_count > zones.
 ##     E.g. ac_count set to 4 and 2 zones set ['1","2"] will create 2x ACs in AZ1 and 2x ACs in AZ2

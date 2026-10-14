@@ -4,6 +4,7 @@ go 1.25.8
 
 require (
 	github.com/gruntwork-io/terratest v0.46.16
+	github.com/stretchr/testify v1.11.1
 	github.com/zscaler/terraform-modules-zscaler-tests-skeleton v0.0.3
 )
 
@@ -70,7 +71,6 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/tmccombs/hcl2json v0.5.0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect

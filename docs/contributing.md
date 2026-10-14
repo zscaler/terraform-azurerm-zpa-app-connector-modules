@@ -7,6 +7,27 @@ and credit will always be given.
 
 Please follow the [Terraform conventions](terraform-conventions.md) for the project.
 
+## Testing
+
+Every module and example has a Terratest suite in `main_test.go`. Run a suite with the Makefile, passing the test name prefix as `ACTION`:
+
+```sh
+make examples/base_ac ACTION=Plan
+```
+
+`ACTION` is passed to `go test -run`, so `Plan` runs every `TestPlan*` function in the directory.
+
+| Action | What it does | Where it runs |
+|--------|--------------|---------------|
+| `Validate` | `terraform init` + `validate` | PR CI, every changed module and example |
+| `Plan` | Plans the example and asserts the planned image, Marketplace purchase plan and Trusted Launch settings, and that the pinned image version is still published in the region | PR CI, every changed example |
+| `Apply` | Deploys and destroys the example | ChatOps `/apply` |
+| `Idempotence` | Deploys, checks that a second plan has no changes, and destroys | ChatOps `/idempotence` |
+
+The plan assertions live in `internal/testhelpers`. The test skeleton only asserts Terraform outputs, so the helpers read the planned resource values instead. `examples/base_ac` deploys the RHEL 9 Generation 2 image with Trusted Launch in `Apply` and `Idempotence`; `examples/ac` covers the Zscaler Marketplace image.
+
+To run the suites locally, log in with `az login` and export `ARM_SUBSCRIPTION_ID`. Examples that create ZPA resources also need the ZPA OneAPI variables (`ZSCALER_CLIENT_ID`, `ZSCALER_CLIENT_SECRET`, `ZSCALER_VANITY_DOMAIN`, `ZPA_CUSTOMER_ID`, and `ZSCALER_CLOUD` where applicable).
+
 ## Publish a new release (for maintainers)
 
 ### Test the release process

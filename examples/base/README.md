@@ -2,6 +2,8 @@
 
 This deployment type is just for greenfield/POV reference and/or spoke workload testing. It does not deploy any App Connector appliances. Full set of resources provisioned list below, but this will effectively create all network infrastructure dependencies for an Azure environment. Creates 1 new Resource Group; 1 VNet with 1 public subnet; 1 Bastion Host in the public subnet assigned a Public IP; and generates local key pair .pem file for ssh access.
 
+The bastion host uses the Generation 2 Ubuntu 22.04 image with Trusted Launch (Secure Boot + vTPM) enabled.
+
 ## Caveats/Considerations
 - WSL2 DNS bug: If you are trying to run these Azure terraform deployments specifically from a Windows WSL2 instance like Ubuntu and receive an error containing a message similar to this "dial tcp: lookup management.azure.com on 172.21.240.1:53: cannot unmarshal DNS message" please refer here for a WSL2 resolv.conf fix. https://github.com/microsoft/WSL/issues/5420#issuecomment-646479747.
 
@@ -40,7 +42,7 @@ From base directory execute:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.7, < 2.0.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.56.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.9.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | ~> 2.5.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6.0 |

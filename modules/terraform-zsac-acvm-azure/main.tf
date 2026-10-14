@@ -9,7 +9,7 @@
 # new subscription where the terms have never been accepted.
 ################################################################################
 resource "azurerm_marketplace_agreement" "zs_image_agreement" {
-  count     = var.accept_marketplace_agreement ? 1 : 0
+  count     = var.accept_marketplace_agreement && var.acvm_image_plan_enabled ? 1 : 0
   offer     = var.acvm_image_offer
   plan      = var.acvm_image_sku
   publisher = var.acvm_image_publisher
@@ -69,6 +69,11 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
   admin_username = var.ac_username
   custom_data    = base64encode(element(var.user_data, count.index))
 
+  # Trusted Launch. Requires a Generation 2 image; changing either forces VM
+  # replacement.
+  secure_boot_enabled = var.secure_boot_enabled
+  vtpm_enabled        = var.vtpm_enabled
+
   # User-assigned Managed Identity passed in by the caller. Used by the OAuth2
   # onboarding flow so the connector VM can publish its OAuth2 user code to Azure
   # Key Vault without any embedded credentials. The identity is created up front
@@ -97,10 +102,14 @@ resource "azurerm_linux_virtual_machine" "ac_vm" {
     version   = var.acvm_image_version
   }
 
-  plan {
-    publisher = var.acvm_image_publisher
-    name      = var.acvm_image_sku
-    product   = var.acvm_image_offer
+  dynamic "plan" {
+    for_each = var.acvm_image_plan_enabled ? [1] : []
+
+    content {
+      publisher = var.acvm_image_publisher
+      name      = var.acvm_image_sku
+      product   = var.acvm_image_offer
+    }
   }
 
   tags = var.global_tags

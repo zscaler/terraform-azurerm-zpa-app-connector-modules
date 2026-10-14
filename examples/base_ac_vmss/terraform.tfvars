@@ -101,6 +101,13 @@
 ##     e.g. if the chosen SKU is capacity-restricted/unavailable in your region.
 #bastion_instance_type                      = "Standard_B2ts_v2"
 
+## 6a. App Connector image. By default the Zscaler App Connector Marketplace image (Generation 1) is deployed.
+##     Set use_zscaler_image to false to deploy a RedHat RHEL 9 Generation 2 image instead, bootstrapped from
+##     the Zscaler yum repository. Trusted Launch (Secure Boot + vTPM) is not available for scale sets yet; use
+##     the ac or base_ac deployment types if it is required. Changing this value replaces the scale set instances.
+
+#use_zscaler_image                          = false
+
 ## 7. By default, no zones are specified in any resource creation meaning they are either auto-assigned by Azure 
 ##    (Virtual Machines and NAT Gateways) or Zone-Redundant (Public IP) based on whatever default configuration is.
 ##    Setting this value to true will do the following:
