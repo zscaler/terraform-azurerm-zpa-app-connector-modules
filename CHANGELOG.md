@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.3.1...v2.0.0) (2026-10-14)
+
+### ⚠ BREAKING CHANGES
+
+* consumers must use hashicorp/azurerm >= 5.9.0. Deployments
+with use_zscaler_image = false will have their VMs replaced, because the image
+changes from the Zscaler Marketplace image to RHEL 9 Gen 2. azurerm 5.0 also
+no longer auto-registers Azure resource providers.
+
+### Features
+
+* Gen 2 image path with Trusted Launch, azurerm 5.9.0, and image pin fix ([#31](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/issues/31)) ([fa23606](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/commit/fa23606ae1b7b334428acfd5ed61fabbb55af0fa))
+
 ## [1.3.1](https://github.com/zscaler/terraform-azurerm-zpa-app-connector-modules/compare/v1.3.0...v1.3.1) (2026-07-07)
 
 ### Bug Fixes
